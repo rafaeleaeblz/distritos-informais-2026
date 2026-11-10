@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Os distritos informais dos deputados | Eleições 2026 — V7.1 · Busca exata · Critério territorial de 50%</title>
+<title>Os distritos informais dos deputados | Eleições 2026 — V7.2 · Embed responsivo · Critério territorial de 50%</title>
 <meta name="description" content="Atlas interativo dos votos municipais dos deputados federais eleitos em 2026. Dados do TSE e malhas do IBGE.">
 <style>
 :root {
@@ -199,9 +199,25 @@ h1 { color: var(--navy); font-size: clamp(28px, 3.9vw, 42px); line-height: 1.12;
 
 
 .credits { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.55; }
+
+/* V7.2 — modo de incorporação. O atlas completo permanece idêntico fora de ?embed=1. */
+body.embed-mode .brandhead,
+body.embed-mode .eyebrow,
+body.embed-mode h1,
+body.embed-mode .intro-list,
+body.embed-mode .base { display: none; }
+body.embed-mode .shell { max-width: none; padding: 8px 6px 20px; }
+body.embed-mode .sectionhead { margin-top: 0; }
+body.embed-mode .sectionhead h2 { font-size: 18px; }
+@media (max-width: 720px) {
+  body.embed-mode .shell { padding: 5px 3px 14px; }
+  body.embed-mode .sectionhead h2 { font-size: 17px; }
+  /* Permite rolar a reportagem com o dedo sobre o mapa, usando +/− para zoom. */
+  body.embed-mode #mapa, body.embed-mode .df-map-zone svg { touch-action: pan-y; }
+}
 </style>
 </head>
-<body data-atlas-versao="v6.14-logo-credito">
+<body data-atlas-versao="v7.2-embed-responsivo">
 <div class="shell">
   <div class="brandhead">
     <div class="brand-kicker">eleições 2026 · atlas interativo</div>
@@ -549,6 +565,49 @@ await choose($('candidato').value);
 }
 init().catch(error);
 })();
+</script>
+
+<script>
+/* V7.2 — comunica a altura do conteúdo ao site hospedeiro de modo seguro. */
+(function () {
+  'use strict';
+  if (new URLSearchParams(window.location.search).get('embed') !== '1') return;
+  document.body.classList.add('embed-mode');
+  const shell = document.querySelector('.shell');
+  let lastHeight = -1;
+  let queued = false;
+
+  function currentHeight() {
+    const shellBottom = shell ? (shell.getBoundingClientRect().bottom + window.scrollY) : 0;
+    return Math.ceil(Math.max(document.body.scrollHeight,
+      document.documentElement.scrollHeight, shellBottom));
+  }
+  function reportHeight(force) {
+    const h = currentHeight();
+    if (!force && Math.abs(h - lastHeight) < 2) return;
+    lastHeight = h;
+    window.parent.postMessage({ type: 'p360-atlas-embed-height', height: h }, '*');
+  }
+  function schedule(force) {
+    if (queued) return;
+    queued = true;
+    window.requestAnimationFrame(function () {
+      queued = false;
+      reportHeight(Boolean(force));
+    });
+  }
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(function () { schedule(false); });
+    observer.observe(document.body);
+    if (shell) observer.observe(shell);
+  }
+  window.addEventListener('load', function () { schedule(true); });
+  window.addEventListener('resize', function () { schedule(true); });
+  window.addEventListener('message', function (event) {
+    if (event.data && event.data.type === 'p360-atlas-request-height') schedule(true);
+  });
+  schedule(true);
+}());
 </script>
 </body>
 </html>
