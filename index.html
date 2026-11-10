@@ -20,12 +20,12 @@ button { cursor: pointer; }
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
 .shell { width: 100%; max-width: 1260px; margin: auto; padding: 24px 20px 38px; }
 .brandhead { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 3px solid var(--orange); padding: 0 0 13px; margin: 0 0 22px; }
-.brand-kicker { color: var(--navy); font-size: 11px; font-weight: 800; letter-spacing: .055em; text-transform: uppercase; }
+.brand-kicker { color: var(--navy); font-size: 11px; font-weight: 800; letter-spacing: .02em; text-transform: none; }
 .brandlogo-link { display: inline-flex; max-width: 38%; align-items: center; flex: 0 0 auto; border-radius: 4px; }
 .brandlogo { width: 164px; max-width: 100%; height: auto; display: block; }
 .brandlogo-link:hover { opacity: .88; }
 .brandlogo-link:focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; }
-.eyebrow { font-size: 11px; color: var(--orange-dark); letter-spacing: .11em; text-transform: uppercase; font-weight: 800; margin-bottom: 7px; }
+.eyebrow { font-size: 11px; color: var(--orange-dark); letter-spacing: .04em; text-transform: none; font-weight: 800; margin-bottom: 7px; }
 h1 { color: var(--navy); font-size: clamp(28px, 3.9vw, 42px); line-height: 1.12; letter-spacing: -.035em; font-weight: 800; margin: 0 0 12px; }
 /* V6.7: subtitulo em topicos curtos, com marcadores laranja pequenos. */
 .intro-list { list-style: none; margin: 0 0 22px; padding: 0; max-width: 950px; color: #3c4d62; font-size: clamp(14px, 1.45vw, 16px); line-height: 1.55; }
@@ -97,7 +97,7 @@ h1 { color: var(--navy); font-size: clamp(28px, 3.9vw, 42px); line-height: 1.12;
 .legend-caption { flex: 0 1 300px; max-width: 325px; font-size: 11px; line-height: 1.5; color: var(--muted); }
 .badge-dot { display: inline-block; vertical-align: -2px; height: 12px; width: 12px; border-radius: 3px; border: 1.5px solid var(--orange); background: rgba(232,95,42,.29); margin-right: 5px; }
 .info-card { padding: 19px 17px 18px; border-top: 3px solid var(--navy); box-shadow: 0 7px 25px #153a680b; }
-.kicker { color: var(--orange-dark); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.kicker { color: var(--orange-dark); font-size: 11px; font-weight: 800; letter-spacing: .03em; text-transform: none; }
 .deputado { color: var(--navy); font-size: 22px; font-weight: 800; line-height: 1.2; letter-spacing: -.02em; margin: 8px 0 5px; overflow-wrap: anywhere; }
 .partido { color: var(--muted); font-size: 12px; margin: 0 0 16px; }
 .stats { border-radius: 10px; border: 1px solid #d8e4ef; background: var(--bg); border-left: 3px solid var(--orange); padding: 13px 12px; margin: 15px 0; }
@@ -294,7 +294,7 @@ body.p360-full-embedded .cities { max-height: none; overflow: visible; }
     <p><strong>fonte:</strong> TSE (Tribunal Superior Eleitoral) e IBGE (Instituto Brasileiro de Geografia e Estatística), com dados eleitorais de 2026 e malhas municipais de 2025</p>
     <p><strong>metodologia:</strong> o levantamento identifica blocos de até 10 municípios contíguos que, juntos, concentram ao menos 50% dos votos de cada deputado federal eleito em 2026 no respectivo Estado. Os blocos identificados foram auditados geograficamente. A busca heurística encontrou 228 blocos, confirmados na auditoria geográfica. Uma busca exata examinou outros 72 deputados com possibilidade matemática de atingir 50% dos votos em até 10 municípios: identificou 11 novos distritos e descartou 61 casos. Para os demais 205 deputados dos Estados, nem a soma dos votos de seus 10 municípios mais votados alcançou 50%. No Distrito Federal, a contiguidade entre zonas eleitorais não foi avaliada</p>
   </div>
-  <div class="credits">painel elaborado por Rafael Barbosa, do Poder360. Todos os direitos reservados.</div>
+  <div class="credits">painel elaborado por <a href="https://www.poder360.com.br/author/rafael-barbosa/" target="_blank" rel="noopener noreferrer">Rafael Barbosa</a>, do Poder360. Todos os direitos reservados.</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script>
@@ -351,7 +351,7 @@ function renderOptions(keep=true){
  const prev=keep?$('candidato').value:'';
  const sel=$('candidato');
  sel.replaceChildren(new Option('selecione um deputado',''),
-   ...subset.map(x=>new Option(`${x.d?'✓ ':''}${x.n} — ${x.p} (${x.u})`,x.id)));
+   ...subset.map(x=>new Option(`${x.d?'✓ ':'○ '}${x.n} — ${x.p} (${x.u})`,x.id)));
  sel.value=(prev&&subset.some(x=>x.id===prev))?prev:'';
  sel.disabled=subset.length===0;
  if(!subset.length){sel.replaceChildren(new Option('nenhum deputado encontrado',''));}
@@ -392,7 +392,7 @@ function atualizarStatusDeputado(d){
   top.textContent='distrito identificado';
   chk.classList.remove('hidden');
  }else{
-  top.textContent='sem distrito nos critérios';
+  top.textContent='sem distrito informal';
   chk.classList.add('hidden');
  }
 }
@@ -438,11 +438,11 @@ async function loadGeo(uf){
  return s.geoCache.get(uf);
 }
 function mapVals(raw){return new Map((raw||[]).map(r=>[code(r[0]),{v:Number(r[1])||0,p:r[2]==null?null:Number(r[2]),q:r[3]==null?null:Number(r[3])}]));}
-function renderInfo(d,rows){const has=d.d===true,df=d.u==='DF';const block=has?`<div class="status good"><strong>distrito informal identificado</strong>${d.b} município${d.b===1?'':'s'} contíguo${d.b===1?'':'s'}, com ${pct(d.bp)} dos votos do deputado.</div>`:
- df?'<div class="status"><strong>DF: contiguidade não analisada</strong>os deputados do DF não integram os 239 blocos municipais confirmados. A votação por zona eleitoral aparece no gráfico e, se a malha geográfica for validada, também em mapa.</div>':'<div class="status"><strong>sem distrito informal nos critérios da pesquisa</strong>não existe um bloco de até 10 municípios contíguos que reúna pelo menos 50% dos votos do deputado, segundo a verificação do teto matemático e a busca exata</div>';
+function renderInfo(d,rows){const has=d.d===true,df=d.u==='DF';const block=has?`<div class="status good"><strong>distrito informal identificado</strong>${d.b} município${d.b===1?'':'s'} contíguo${d.b===1?'':'s'}, com ${pct(d.bp)} dos votos do deputado</div>`:
+ df?'<div class="status"><strong>DF: contiguidade não analisada</strong>os deputados do DF não integram os 239 blocos municipais confirmados. A votação por zona eleitoral aparece no gráfico e, se a malha geográfica for validada, também em mapa.</div>':'<div class="status"><strong>sem distrito informal</strong>não existe um bloco de até 10 municípios contíguos que reúna pelo menos 50% dos votos do deputado, segundo a verificação do teto matemático e a busca exata</div>';
 const cities=has?`<div class="city-list-title">municípios do distrito informal</div><ol class="cities">${(d.cidades||[]).map(x=>`<li>${safe(x.n)} <span class="muted">(${number(x.v)} votos)</span></li>`).join('')}</ol>`:'';
 $('info').innerHTML=`<div><div class="kicker">${safe(d.u)} · ${safe(d.p)}</div><div class="deputado">${safe(d.n)}</div><div class="partido">deputado federal eleito em 2026</div><div class="stats"><div class="stat-label">total de votos do deputado</div><div class="big-number">${number(d.t)}</div><div class="muted">votos nominais em toda a unidade da Federação</div></div>${block}<div class="stat-grid"><div><div class="stat-label">votos no distrito</div><div class="stat-number">${has?number(d.bv):'—'}</div></div><div><div class="stat-label">% no distrito</div><div class="stat-number">${has?pct(d.bp):'—'}</div></div></div>${cities}</div><div class="notes">${df?'No DF, o gráfico abaixo usa zonas eleitorais; não são tratados como municípios.':'Passe o cursor sobre cada município para ver votos e participação local.'}<br>Em “% dos válidos locais”, o denominador é o total de votos válidos para deputado federal no município (inclusive votos de legenda).</div>`;}
-function setButtons(has,df){const el=$('toggleDistrict');el.disabled=!has||df;el.classList.toggle('outline-on',s.outline&&has&&!df);el.setAttribute('aria-pressed',String(s.outline&&has&&!df));el.textContent=!has?(df?'sem destaque geográfico no DF':'sem distrito nos critérios'):(s.outline?'ocultar destaque do distrito':'mostrar destaque do distrito');}
+function setButtons(has,df){const el=$('toggleDistrict');el.disabled=!has||df;el.classList.toggle('outline-on',s.outline&&has&&!df);el.setAttribute('aria-pressed',String(s.outline&&has&&!df));el.textContent=!has?(df?'sem destaque geográfico no DF':'sem distrito informal'):(s.outline?'ocultar destaque do distrito':'mostrar destaque do distrito');}
 function cssColor(t){if(!Number.isFinite(t)||t<=0)return '#eff5fa';return d3.interpolateRgbBasis(['#dbeaf5','#97bddc','#3f85b6','#193f74'])(Math.max(0,Math.min(1,t)));}
 function resetStage(){d3.select('#mapa').selectAll('*').remove();$('stage').querySelectorAll('.df-chart,.df-scroll,.df-layout').forEach(e=>e.remove());$('tooltip').style.display='none';}
 function showTooltip(event,feature){const id=code(feature.properties.cod_ibge),x=s.voteMap.get(id)||{v:0,p:0};const name=feature.properties.name_muni||feature.properties.nome||id;const em=s.districtSet.has(id);$('tooltip').innerHTML=`<strong>${safe(name)}</strong> ${em?'<span>· distrito informal</span>':''}<div>${number(x.v)} votos</div><div><span>${pct(x.p)} dos válidos locais · ${pct(x.q)} dos votos do deputado</span></div>`;const rc=$('stage').getBoundingClientRect();const e=$('tooltip');e.style.display='block';const w=e.offsetWidth,h=e.offsetHeight;e.style.left=Math.max(6,Math.min(rc.width-w-6,event.clientX-rc.left+13))+'px';e.style.top=Math.max(6,Math.min(rc.height-h-6,event.clientY-rc.top+12))+'px';}
