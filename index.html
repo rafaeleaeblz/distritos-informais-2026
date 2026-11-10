@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Os distritos informais dos deputados | Eleições 2026 — V7.5 · Embed completo responsivo · Critério territorial de 50%</title>
+<title>Os distritos informais dos deputados | Eleições 2026 — V7.8 · Links individuais por deputado · Critério territorial de 50%</title>
 <meta name="description" content="Atlas interativo dos votos municipais dos deputados federais eleitos em 2026. Dados do TSE e malhas do IBGE.">
 <style>
 :root {
@@ -55,6 +55,17 @@ h1 { color: var(--navy); font-size: clamp(28px, 3.9vw, 42px); line-height: 1.12;
 .candidate-label { display:flex; align-items:center; gap:7px; justify-content:space-between; flex-wrap:wrap; }
 .candidate-status { color:var(--orange-dark); font-size:10px; font-weight:800; letter-spacing:0; line-height:1.4; }
 .candidate-status.unidentified { color:#6b7f96; }
+/* V7.8: link permanente para cada deputado, também acessível dentro do iframe. */
+.share-deputado { border:0; background:transparent; color:var(--blue); font-weight:700; font-size:11px; cursor:pointer; padding:2px 0; text-decoration:underline; text-underline-offset:3px; white-space:nowrap; }
+.share-deputado:hover:not(:disabled) { color:var(--orange-dark); }
+.share-deputado:disabled { color:#8295a9; cursor:default; text-decoration:none; }
+.share-result { display:block; font-size:10px; color:var(--muted); margin-top:4px; }
+.share-result[hidden] { display:none; }
+.share-fallback { display:flex; align-items:center; gap:5px; margin-top:5px; }
+.share-fallback[hidden] { display:none; }
+.share-fallback input { height:31px; font-size:11px; flex:1; min-width:0; }
+.share-fallback button { font-size:11px; border:1px solid #bfccdd; border-radius:5px; background:var(--bg); padding:5px; }
+
 .field { min-width: 0; }
 .field label, .metric-box .lbl { display: block; color: var(--navy); font-size: 11px; font-weight: 800; letter-spacing: .055em; margin-bottom: 7px; }
 .field select, .field input { height: 43px; width: 100%; min-width: 0; border: 1px solid #bfccdd; border-radius: 9px; background: white; color: #263b57; padding: 0 12px; font-size: 13px; }
@@ -116,6 +127,10 @@ h1 { color: var(--navy); font-size: clamp(28px, 3.9vw, 42px); line-height: 1.12;
 .cities li { line-height: 1.5; padding: 3px 0; }
 .cities li::marker { color: var(--orange); font-weight: 800; }
 .notes { color: #687a90; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.58; padding-top: 12px; margin-top: 16px; }
+.notes ul { margin: 0; padding-left: 17px; font-size: inherit; line-height: inherit; }
+.notes li { margin: 0 0 5px; font-size: inherit; line-height: inherit; }
+.notes li:last-child { margin-bottom: 0; }
+.notes li::marker { color: var(--orange); }
 .footer { color: #667991; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.65; padding-top: 13px; margin-top: 18px; }
 .footer strong { color: var(--navy); }
 .footer p { margin: 0 0 6px; }
@@ -250,7 +265,7 @@ body.p360-full-embedded .cities { max-height: none; overflow: visible; }
 }
 </style>
 </head>
-<body data-atlas-versao="v7.5-embed-completo-responsivo">
+<body data-atlas-versao="v7.8-links-individuais">
 <div class="shell">
   <div class="brandhead">
     <div class="brand-kicker">eleições 2026 · atlas interativo</div>
@@ -277,7 +292,7 @@ body.p360-full-embedded .cities { max-height: none; overflow: visible; }
     <div class="check-legend" id="topStatus" aria-live="polite" aria-label="status do distrito informal"><span class="orange-check" id="topStatusCheck" aria-hidden="true">✓</span><span id="topStatusText">distrito identificado</span></div>
     <div class="field"><label for="uf">Estado</label><select id="uf"><option value="TODOS">todos os Estados</option></select></div>
     <div class="field"><label for="busca">buscar deputado</label><input id="busca" type="search" placeholder="digite parte do nome" autocomplete="off"></div>
-    <div class="field candidate-field"><div class="candidate-label"><label for="candidato">deputado federal</label></div><select id="candidato" aria-label="escolha um deputado"></select></div>
+    <div class="field candidate-field"><div class="candidate-label"><label for="candidato">deputado federal</label><button id="copiarLinkDeputado" type="button" class="share-deputado" disabled aria-label="Copiar link direto do deputado selecionado">copiar link deste deputado</button></div><select id="candidato" aria-label="escolha um deputado"></select><span id="shareResult" class="share-result" role="status" aria-live="polite" hidden></span><div id="shareFallback" class="share-fallback" hidden><input id="shareFallbackInput" type="text" readonly aria-label="Link direto para copiar"><button id="shareFallbackSelect" type="button">selecionar link</button></div></div>
     <div class="metric-box"><span class="lbl">colorir municípios por</span><div class="metric-buttons" role="group" aria-label="métrica do mapa"><button id="votos" class="active" type="button" aria-pressed="true">total de votos</button><button id="percentual" type="button" aria-pressed="false">% dos válidos locais</button><button id="percentualDeputado" type="button" aria-pressed="false">% dos votos do deputado</button></div></div>
   </div>
   <div class="layout">
@@ -294,7 +309,7 @@ body.p360-full-embedded .cities { max-height: none; overflow: visible; }
     <p><strong>fonte:</strong> TSE (Tribunal Superior Eleitoral) e IBGE (Instituto Brasileiro de Geografia e Estatística), com dados eleitorais de 2026 e malhas municipais de 2025</p>
     <p><strong>metodologia:</strong> o levantamento identifica blocos de até 10 municípios contíguos que, juntos, concentram ao menos 50% dos votos de cada deputado federal eleito em 2026 no respectivo Estado. Os blocos identificados foram auditados geograficamente. A busca heurística encontrou 228 blocos, confirmados na auditoria geográfica. Uma busca exata examinou outros 72 deputados com possibilidade matemática de atingir 50% dos votos em até 10 municípios: identificou 11 novos distritos e descartou 61 casos. Para os demais 205 deputados dos Estados, nem a soma dos votos de seus 10 municípios mais votados alcançou 50%. No Distrito Federal, a contiguidade entre zonas eleitorais não foi avaliada</p>
   </div>
-  <div class="credits">painel elaborado por <a href="https://www.poder360.com.br/author/rafael-barbosa/" target="_blank" rel="noopener noreferrer">Rafael Barbosa</a>, do Poder360. Todos os direitos reservados.</div>
+  <div class="credits">painel elaborado por <a href="https://www.poder360.com.br/author/rafael-barbosa/" target="_blank" rel="noopener noreferrer">Rafael Barbosa</a>. Todos os direitos reservados do <strong>Poder360®</strong></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script>
@@ -305,6 +320,71 @@ const $=id=>document.getElementById(id);
 const fmtInt=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0});
 const fmtPct=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
 const s={dfGeo:null,dfGeoRequest:null,catalog:[],current:null,metric:'votos',outline:true,ufCache:new Map(),geoCache:new Map(),df:null,geo:null,voteMap:new Map(),districtSet:new Set(),zoom:null,drawToken:0};
+// Links permanentes: o identificador da base é a chave única. A UF é informativa.
+// No embed do WordPress, o endereço do iframe muda, mas não o da reportagem.
+// Por isso oferecemos um botão de copiar que compartilha a página completa do atlas.
+function construirUrlDeputado(d,compartilhar=false){
+ const u=new URL(window.location.href);
+ if(compartilhar){u.search='';u.hash='';}
+ u.searchParams.set('uf',String(d.u));
+ u.searchParams.set('deputado',String(d.id));
+ return u;
+}
+function atualizarUrlNavegacao(d){
+ const nova=construirUrlDeputado(d);
+ if(nova.href!==window.location.href){
+  window.history.pushState({deputado:String(d.id)},'',nova.pathname+nova.search+nova.hash);
+ }
+}
+function deputadoDaUrl(){
+ const id=new URLSearchParams(window.location.search).get('deputado');
+ return id?s.catalog.find(d=>String(d.id)===id):null;
+}
+function acaoCompartilhar(d){
+ const b=$('copiarLinkDeputado');
+ if(b){b.disabled=!d;b.textContent='copiar link deste deputado';}
+ $('shareResult').hidden=true;
+ $('shareFallback').hidden=true;
+}
+async function copiarLinkDeputado(){
+ const d=s.current;
+ if(!d)return;
+ const url=construirUrlDeputado(d,true).href;
+ let copiado=false;
+ try{
+  if(navigator.clipboard&&typeof navigator.clipboard.writeText==='function'){
+   await navigator.clipboard.writeText(url);copiado=true;
+  }
+ }catch(e){console.info('[ATLAS V7.8] Clipboard API indisponível no iframe:',e.message);}
+ if(!copiado){
+  const temp=document.createElement('textarea');
+  temp.value=url;temp.setAttribute('readonly','');
+  temp.style.cssText='position:fixed;left:-9999px;top:0;opacity:0;';
+  document.body.appendChild(temp);temp.focus();temp.select();
+  try{copiado=document.execCommand('copy');}catch(e){}
+  temp.remove();
+ }
+ const result=$('shareResult');
+ result.hidden=false;
+ if(copiado){
+  result.textContent='link copiado — abre diretamente em '+d.n+' ('+d.u+')';
+  $('shareFallback').hidden=true;
+ }else{
+  // Fallback visível: alguns WordPress bloqueiam clipboard-write nos iframes.
+  result.textContent='selecione o endereço abaixo para copiar';
+  $('shareFallbackInput').value=url;
+  $('shareFallback').hidden=false;
+  $('shareFallbackInput').focus();$('shareFallbackInput').select();
+ }
+}
+function selecionarDeputadoPeloEndereco(d){
+ $('uf').value=d.u;
+ $('busca').value='';
+ renderOptions(false);
+ $('candidato').value=String(d.id);
+ choose(String(d.id));
+}
+
 const safe=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const normalized=t=>String(t??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const code=x=>String(x??'').replace(/\.0$/,'').padStart(7,'0');
@@ -369,6 +449,7 @@ function limparMapa(titulo,subtitulo,informacao){
  setButtons(false,false);
  $('toggleDistrict').textContent='selecione um deputado';
  atualizarStatusDeputado(null);
+ acaoCompartilhar(null);
  $('legendMax').textContent='—';
  note(null);
 }
@@ -441,7 +522,7 @@ function mapVals(raw){return new Map((raw||[]).map(r=>[code(r[0]),{v:Number(r[1]
 function renderInfo(d,rows){const has=d.d===true,df=d.u==='DF';const block=has?`<div class="status good"><strong>distrito informal identificado</strong>${d.b} município${d.b===1?'':'s'} contíguo${d.b===1?'':'s'}, com ${pct(d.bp)} dos votos do deputado</div>`:
  df?'<div class="status"><strong>DF: contiguidade não analisada</strong>os deputados do DF não integram os 239 blocos municipais confirmados. A votação por zona eleitoral aparece no gráfico e, se a malha geográfica for validada, também em mapa.</div>':'<div class="status"><strong>sem distrito informal</strong>não existe um bloco de até 10 municípios contíguos que reúna pelo menos 50% dos votos do deputado, segundo a verificação do teto matemático e a busca exata</div>';
 const cities=has?`<div class="city-list-title">municípios do distrito informal</div><ol class="cities">${(d.cidades||[]).map(x=>`<li>${safe(x.n)} <span class="muted">(${number(x.v)} votos)</span></li>`).join('')}</ol>`:'';
-$('info').innerHTML=`<div><div class="kicker">${safe(d.u)} · ${safe(d.p)}</div><div class="deputado">${safe(d.n)}</div><div class="partido">deputado federal eleito em 2026</div><div class="stats"><div class="stat-label">total de votos do deputado</div><div class="big-number">${number(d.t)}</div><div class="muted">votos nominais em toda a unidade da Federação</div></div>${block}<div class="stat-grid"><div><div class="stat-label">votos no distrito</div><div class="stat-number">${has?number(d.bv):'—'}</div></div><div><div class="stat-label">% no distrito</div><div class="stat-number">${has?pct(d.bp):'—'}</div></div></div>${cities}</div><div class="notes">${df?'No DF, o gráfico abaixo usa zonas eleitorais; não são tratados como municípios.':'Passe o cursor sobre cada município para ver votos e participação local.'}<br>Em “% dos válidos locais”, o denominador é o total de votos válidos para deputado federal no município (inclusive votos de legenda).</div>`;}
+$('info').innerHTML=`<div><div class="kicker">${safe(d.u)} · ${safe(d.p)}</div><div class="deputado">${safe(d.n)}</div><div class="partido">deputado federal eleito em 2026</div><div class="stats"><div class="stat-label">total de votos do deputado</div><div class="big-number">${number(d.t)}</div><div class="muted">votos nominais em toda a unidade da Federação</div></div>${block}<div class="stat-grid"><div><div class="stat-label">votos no distrito</div><div class="stat-number">${has?number(d.bv):'—'}</div></div><div><div class="stat-label">% no distrito</div><div class="stat-number">${has?pct(d.bp):'—'}</div></div></div>${cities}</div><div class="notes"><ul><li>${df?'no DF, o gráfico abaixo usa zonas eleitorais; não são tratados como municípios':'passe o cursor sobre cada município para ver votos e participação local'}</li><li>em “% dos válidos locais”, o denominador é o total de votos válidos para deputado federal no município (inclusive votos de legenda)</li></ul></div>`;}
 function setButtons(has,df){const el=$('toggleDistrict');el.disabled=!has||df;el.classList.toggle('outline-on',s.outline&&has&&!df);el.setAttribute('aria-pressed',String(s.outline&&has&&!df));el.textContent=!has?(df?'sem destaque geográfico no DF':'sem distrito informal'):(s.outline?'ocultar destaque do distrito':'mostrar destaque do distrito');}
 function cssColor(t){if(!Number.isFinite(t)||t<=0)return '#eff5fa';return d3.interpolateRgbBasis(['#dbeaf5','#97bddc','#3f85b6','#193f74'])(Math.max(0,Math.min(1,t)));}
 function resetStage(){d3.select('#mapa').selectAll('*').remove();$('stage').querySelectorAll('.df-chart,.df-scroll,.df-layout').forEach(e=>e.remove());$('tooltip').style.display='none';}
@@ -582,19 +663,24 @@ function drawDF(d,raw){
  }
  note(null);
 }
-async function choose(id){const d=s.catalog.find(x=>x.id===id);if(!d)return;const token=++s.drawToken;s.current=d;atualizarStatusDeputado(d);setButtons(d.d,d.u==='DF');renderInfo(d);$('info').setAttribute('aria-busy','true');$('mapTitle').textContent='carregando '+d.u+'…';try{
+async function choose(id,registrarUrl=false){const d=s.catalog.find(x=>String(x.id)===String(id));if(!d)return;if(registrarUrl)atualizarUrlNavegacao(d);const token=++s.drawToken;s.current=d;acaoCompartilhar(d);atualizarStatusDeputado(d);setButtons(d.d,d.u==='DF');renderInfo(d);$('info').setAttribute('aria-busy','true');$('mapTitle').textContent='carregando '+d.u+'…';try{
  if(d.u==='DF'){if(!s.df)s.df=fetchJSON(ROOT+'df.json');const [data]=await Promise.all([s.df,carregarMalhaDF()]);if(token!==s.drawToken)return;const byId=data.zonas||{};s.geo=null;renderInfo(d);drawDF(d,byId[d.id]||[]);}else{d3.select('#mapa').style('display','block');$('zoomIn').disabled=$('zoomOut').disabled=$('zoomReset').disabled=false;const [state,geo]=await Promise.all([loadState(d.u),loadGeo(d.u)]);if(token!==s.drawToken)return;s.geo=geo;s.voteMap=mapVals((state.votos||{})[d.id]);const blockRaw=(state.blocos||{})[d.id]||[];s.districtSet=new Set((Array.isArray(blockRaw)?blockRaw:[blockRaw]).map(code));if(d.d&&s.districtSet.size===0)throw new Error('O bloco auditado não está no arquivo de municípios: '+d.id);drawGeo(d);}
  }catch(e){if(token===s.drawToken)error(e);}finally{if(token===s.drawToken)$('info').removeAttribute('aria-busy');}}
 async function init(){if(typeof d3==='undefined')throw new Error('A biblioteca de mapas D3 não carregou. Confirme o acesso à internet ou hospede uma cópia local do d3.min.js.');const raw=await fetchJSON(ROOT+'deputados.json');const esperados=Number(raw.distritos_confirmados);if(esperados!==239)throw new Error('A pasta data/ ainda não está na versão atualizada: deputados.json informa '+esperados+' distritos; necessários 239. Utilize a pasta data/ gerada pelo R V7.');s.catalog=(raw.deputados||[]).map(d=>({...d,n:formatarNomeDeputado(d.n),p:formatarPartido(d.p)}));if(s.catalog.length!==513)throw new Error('Catálogo incompleto: esperados 513 deputados; encontrados '+s.catalog.length);const count=s.catalog.filter(d=>d.d).length;if(count!==esperados)throw new Error('Inconsistência dos dados: o catálogo informa '+count+' distritos identificados, mas os metadados indicam '+esperados+'.');const ufs=[...new Set(s.catalog.map(d=>d.u))].sort();ufs.forEach(uf=>$('uf').add(new Option(uf,uf)));
-$('uf').value='SP';renderOptions(false);
-// Padrao editorial: Sao Paulo e Adriana Ventura, primeira na lista alfabetica de SP.
+// Padrao editorial sem parametro na URL: SP e Adriana Ventura.
 const candidataPadrao=s.catalog.find(d=>d.u==='SP'&&normalized(d.n)==='adriana ventura');
 if(!candidataPadrao)throw new Error('Adriana Ventura (SP) nao consta no catalogo de 513 deputados.');
-$('candidato').value=String(candidataPadrao.id);
-$('uf').addEventListener('change',()=>aplicarFiltros(false));$('busca').addEventListener('input',()=>aplicarFiltros(false));$('candidato').addEventListener('change',()=>{const id=$('candidato').value;if(id)choose(id);else mostrarAguardandoEscolha();});
+const candidataInicial=deputadoDaUrl()||candidataPadrao;
+selecionarDeputadoPeloEndereco(candidataInicial);
+$('uf').addEventListener('change',()=>aplicarFiltros(false));$('busca').addEventListener('input',()=>aplicarFiltros(false));$('candidato').addEventListener('change',()=>{const id=$('candidato').value;if(id)choose(id,true);else mostrarAguardandoEscolha();});
+$('copiarLinkDeputado').addEventListener('click',copiarLinkDeputado);
+$('shareFallbackSelect').addEventListener('click',()=>{$('shareFallbackInput').focus();$('shareFallbackInput').select();});
+window.addEventListener('popstate',()=>{
+ selecionarDeputadoPeloEndereco(deputadoDaUrl()||candidataPadrao);
+});
 for(const [id,key] of [['votos','votos'],['percentual','percentual'],['percentualDeputado','percentualDeputado']])$(id).addEventListener('click',()=>{if(s.metric===key)return;s.metric=key;for(const b of ['votos','percentual','percentualDeputado']){$(b).classList.toggle('active',b===id);$(b).setAttribute('aria-pressed',String(b===id));}if(s.current){if(s.current.u==='DF')s.df.then(data=>drawDF(s.current,(data.zonas||{})[s.current.id]||[]));else drawGeo(s.current);}});
 $('toggleDistrict').addEventListener('click',()=>{if(!s.current?.d||s.current.u==='DF')return;s.outline=!s.outline;setButtons(true,false);drawGeo(s.current);});$('zoomIn').addEventListener('click',()=>s.zoom?.svg.transition().duration(200).call(s.zoom.zoom.scaleBy,1.45));$('zoomOut').addEventListener('click',()=>s.zoom?.svg.transition().duration(200).call(s.zoom.zoom.scaleBy,1/1.45));$('zoomReset').addEventListener('click',()=>s.zoom?.svg.transition().duration(220).call(s.zoom.zoom.transform,d3.zoomIdentity));
-await choose($('candidato').value);
+// A selecao inicial ja foi feita por selecionarDeputadoPeloEndereco.
 }
 init().catch(error);
 })();
@@ -629,7 +715,7 @@ init().catch(error);
     window.parent.postMessage({
       type: 'p360-atlas-embed-height',
       height: h,
-      version: '7.5'
+      version: '7.8'
     }, '*');
   }
 
