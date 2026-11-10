@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Os distritos informais dos deputados | Eleições 2026 — V7.3 · Embed completo responsivo · Critério territorial de 50%</title>
+<title>Os distritos informais dos deputados | Eleições 2026 — V7.4 · Embed completo sem rolagem interna · Critério territorial de 50%</title>
 <meta name="description" content="Atlas interativo dos votos municipais dos deputados federais eleitos em 2026. Dados do TSE e malhas do IBGE.">
 <style>
 :root {
@@ -214,6 +214,16 @@ body.embed-mode .sectionhead h2 { font-size: 18px; }
   body.embed-mode .sectionhead h2 { font-size: 17px; }
   /* Permite rolar a reportagem com o dedo sobre o mapa, usando +/− para zoom. */
   body.embed-mode #mapa, body.embed-mode .df-map-zone svg { touch-action: pan-y; }
+}
+
+/* V7.4 — remover rolagem interna SOMENTE após handshake com o site hospedeiro.
+   Sem o JavaScript do CMS, o iframe continua com rolagem de emergência em vez de cortar conteúdo. */
+html.p360-parent-sizes-frame,
+html.p360-parent-sizes-frame body { overflow-y: hidden !important; overflow-x: hidden !important; }
+@media (max-width: 720px) {
+  /* O toque vertical rola a reportagem; para zoom, use os botões do mapa. */
+  body.p360-full-embedded #mapa,
+  body.p360-full-embedded .df-map-zone svg { touch-action: pan-y !important; }
 }
 </style>
 </head>
@@ -568,47 +578,69 @@ init().catch(error);
 </script>
 
 <script>
-/* V7.3 — comunica a altura tanto no modo compacto quanto no completo. */
+/* V7.4 — altura do atlas completo enviada ao post pai; sem rolagem interna. */
 (function () {
   'use strict';
-  const embedMode = new URLSearchParams(window.location.search).get('embed');
-  if (embedMode !== '1' && embedMode !== 'full') return;
-  // Só o modo compacto oculta a introdução; o modo full preserva tudo.
-  if (embedMode === '1') document.body.classList.add('embed-mode');
-  const shell = document.querySelector('.shell');
-  let lastHeight = -1;
-  let queued = false;
+  var params = new URLSearchParams(window.location.search);
+  var mode = params.get('embed');
+  if (mode !== 'full' && mode !== '1') return;
+  if (mode === '1') document.body.classList.add('embed-mode');
+  if (mode === 'full') document.body.classList.add('p360-full-embedded');
 
-  function currentHeight() {
-    // Medir o conteúdo, não a altura do próprio iframe, para evitar
-    // um ciclo que impeça a redução da altura após mudança de largura.
-    const shellBottom = shell ? shell.getBoundingClientRect().bottom + window.scrollY : 0;
-    return Math.ceil(Math.max(250, shellBottom + 4));
+  var shell = document.querySelector('.shell');
+  var lastReported = -1;
+  var pending = false;
+  var parentReady = false;
+
+  function measure() {
+    // NÃO usar documentElement.scrollHeight: pode incluir a altura atual
+    // do iframe e impedir que ele diminua após o layout mudar.
+    var bottom = shell ? (shell.getBoundingClientRect().bottom + window.scrollY) : 0;
+    return Math.max(260, Math.ceil(bottom + 12));
   }
-  function reportHeight(force) {
-    const h = currentHeight();
-    if (!force && Math.abs(h - lastHeight) < 2) return;
-    lastHeight = h;
-    window.parent.postMessage({ type: 'p360-atlas-embed-height', height: h }, '*');
+
+  function send(force) {
+    var h = measure();
+    if (!force && Math.abs(h - lastReported) < 2) return;
+    lastReported = h;
+    window.parent.postMessage({
+      type: 'p360-atlas-embed-height',
+      height: h,
+      version: '7.4'
+    }, '*');
   }
+
   function schedule(force) {
-    if (queued) return;
-    queued = true;
+    if (pending) return;
+    pending = true;
     window.requestAnimationFrame(function () {
-      queued = false;
-      reportHeight(Boolean(force));
+      pending = false;
+      send(Boolean(force));
     });
   }
+
+  window.addEventListener('message', function (event) {
+    if (event.source !== window.parent || !event.data) return;
+    if (event.data.type === 'p360-atlas-parent-ready') {
+      parentReady = true;
+      document.documentElement.classList.add('p360-parent-sizes-frame');
+      schedule(true);
+    }
+    if (event.data.type === 'p360-atlas-request-height') schedule(true);
+  });
+
   if ('ResizeObserver' in window) {
-    const observer = new ResizeObserver(function () { schedule(false); });
-    observer.observe(document.body);
-    if (shell) observer.observe(shell);
+    var ro = new ResizeObserver(function () { schedule(false); });
+    if (shell) ro.observe(shell);
+  }
+  if ('MutationObserver' in window && shell) {
+    var mo = new MutationObserver(function () { schedule(false); });
+    mo.observe(shell, { childList: true, subtree: true, characterData: true,
+                        attributes: true, attributeFilter: ['class','style','hidden'] });
   }
   window.addEventListener('load', function () { schedule(true); });
   window.addEventListener('resize', function () { schedule(true); });
-  window.addEventListener('message', function (event) {
-    if (event.data && event.data.type === 'p360-atlas-request-height') schedule(true);
-  });
+  document.fonts && document.fonts.ready && document.fonts.ready.then(function () { schedule(true); });
   schedule(true);
 }());
 </script>
