@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Os distritos informais dos deputados | Eleições 2026 — V7.4 · Embed completo sem rolagem interna · Critério territorial de 50%</title>
+<title>Os distritos informais dos deputados | Eleições 2026 — V7.5 · Embed completo responsivo · Critério territorial de 50%</title>
 <meta name="description" content="Atlas interativo dos votos municipais dos deputados federais eleitos em 2026. Dados do TSE e malhas do IBGE.">
 <style>
 :root {
@@ -225,9 +225,32 @@ html.p360-parent-sizes-frame body { overflow-y: hidden !important; overflow-x: h
   body.p360-full-embedded #mapa,
   body.p360-full-embedded .df-map-zone svg { touch-action: pan-y !important; }
 }
+
+/* V7.5 — ajustes exclusivamente na apresentacao completa incorporada. */
+body.p360-full-embedded .cities { max-height: none; overflow: visible; }
+@media (max-width: 720px) {
+  body.p360-full-embedded .shell { padding: 12px 10px 22px; }
+  body.p360-full-embedded .brandhead { margin-bottom: 14px; padding-bottom: 10px; }
+  body.p360-full-embedded .intro-list { font-size: 13px; line-height: 1.48; margin-bottom: 15px; }
+  body.p360-full-embedded .intro-list li { margin-bottom: 5px; }
+  body.p360-full-embedded h1 { font-size: clamp(24px, 5.7vw, 30px); margin-bottom: 10px; }
+  body.p360-full-embedded .base { padding: 12px; margin-bottom: 17px; }
+  body.p360-full-embedded .sectionhead { margin-bottom: 9px; }
+  body.p360-full-embedded .toolbar { padding: 11px; row-gap: 9px; margin-bottom: 11px; }
+  body.p360-full-embedded .map-header { padding: 12px; gap: 7px; }
+  body.p360-full-embedded .map-title { font-size: 17px; }
+  body.p360-full-embedded .map-stage { height: clamp(320px, 80vw, 430px); }
+  body.p360-full-embedded .footer { margin-top: 13px; }
+  body.p360-full-embedded .credits { margin-top: 12px; }
+}
+@media (max-width: 400px) {
+  body.p360-full-embedded .toolbar .metric-buttons { flex-wrap: wrap; }
+  body.p360-full-embedded .metric-buttons button { min-width: 28%; }
+  body.p360-full-embedded .shell { padding-left: 8px; padding-right: 8px; }
+}
 </style>
 </head>
-<body data-atlas-versao="v7.3-embed-completo-responsivo">
+<body data-atlas-versao="v7.5-embed-completo-responsivo">
 <div class="shell">
   <div class="brandhead">
     <div class="brand-kicker">eleições 2026 · atlas interativo</div>
@@ -578,7 +601,7 @@ init().catch(error);
 </script>
 
 <script>
-/* V7.4 — altura do atlas completo enviada ao post pai; sem rolagem interna. */
+/* V7.5 — altura real comunicada ao site pai quando o CMS permite um script autorizado. */
 (function () {
   'use strict';
   var params = new URLSearchParams(window.location.search);
@@ -596,7 +619,7 @@ init().catch(error);
     // NÃO usar documentElement.scrollHeight: pode incluir a altura atual
     // do iframe e impedir que ele diminua após o layout mudar.
     var bottom = shell ? (shell.getBoundingClientRect().bottom + window.scrollY) : 0;
-    return Math.max(260, Math.ceil(bottom + 12));
+    return Math.max(260, Math.ceil(bottom + 40));
   }
 
   function send(force) {
@@ -606,7 +629,7 @@ init().catch(error);
     window.parent.postMessage({
       type: 'p360-atlas-embed-height',
       height: h,
-      version: '7.4'
+      version: '7.5'
     }, '*');
   }
 
