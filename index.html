@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Os distritos informais dos deputados | Eleições 2026 — V7.1 · Busca exata · Critério territorial de 50%</title>
+<meta name="description" content="Atlas interativo dos votos municipais dos deputados federais eleitos em 2026. Dados do TSE e malhas do IBGE.">
+<style>
+:root {
+  --navy: #1f4378; --navy-deep: #19385f; --blue: #286aad;
+  --orange: #e85f2a; --orange-dark: #c64d20;
+  --orange-faint: #fff2ec; --ink: #19314e; --muted: #53667e;
+  --line: #dbe3ec; --bg: #f5f8fb; --white: #fff; --r: 13px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: white; color: var(--ink); font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+.shell { width: 100%; max-width: 1260px; margin: auto; padding: 24px 20px 38px; }
+.brandhead { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 3px solid var(--orange); padding: 0 0 13px; margin: 0 0 22px; }
+.brand-kicker { color: var(--navy); font-size: 11px; font-weight: 800; letter-spacing: .055em; text-transform: uppercase; }
+.brandlogo-link { display: inline-flex; max-width: 38%; align-items: center; flex: 0 0 auto; border-radius: 4px; }
+.brandlogo { width: 164px; max-width: 100%; height: auto; display: block; }
+.brandlogo-link:hover { opacity: .88; }
+.brandlogo-link:focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; }
+.eyebrow { font-size: 11px; color: var(--orange-dark); letter-spacing: .11em; text-transform: uppercase; font-weight: 800; margin-bottom: 7px; }
+h1 { color: var(--navy); font-size: clamp(28px, 3.9vw, 42px); line-height: 1.12; letter-spacing: -.035em; font-weight: 800; margin: 0 0 12px; }
+/* V6.7: subtitulo em topicos curtos, com marcadores laranja pequenos. */
+.intro-list { list-style: none; margin: 0 0 22px; padding: 0; max-width: 950px; color: #3c4d62; font-size: clamp(14px, 1.45vw, 16px); line-height: 1.55; }
+.intro-list li { position: relative; padding-left: 17px; margin: 0 0 7px; }
+.intro-list li:last-child { margin-bottom: 0; }
+.intro-list li::before { content: ""; position: absolute; left: 0; top: .69em; width: 6px; height: 6px; background: var(--orange); border-radius: 50%; }
+
+.base { background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--orange); border-radius: 10px; padding: 16px 18px 17px; margin-bottom: 24px; }
+.base-head { display: flex; justify-content: space-between; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 11px; }
+.base-head strong { color: var(--navy); font-size: 13px; }
+.pill { color: var(--orange-dark); background: var(--orange-faint); border: 1px solid #f9d5c5; border-radius: 99px; font-size: 11px; font-weight: 800; padding: 4px 10px; white-space: nowrap; }
+.base-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.base-figure { min-width: 0; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #dce4ed; padding-right: 12px; }
+.base-figure:last-child { border-right: 0; }
+.base-figure b { color: var(--navy); font-size: clamp(19px,2.3vw,27px); letter-spacing: -.04em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.base-figure span { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.sectionhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 11px; }
+.sectionhead h2 { color: var(--navy); font-size: 20px; letter-spacing: -.025em; line-height: 1.25; margin: 0; }
+.toolbar { display: grid; grid-template-columns: 125px minmax(160px,.82fr) minmax(210px,1.18fr); column-gap: 13px; row-gap: 12px; align-items: end; padding: 16px 17px; background: white; border: 1px solid var(--line); border-top: 3px solid var(--orange); border-radius: var(--r); margin: 0 0 14px; }
+/* V6.8: uma única chave discreta no lugar dos filtros de grupo. */
+.check-legend { grid-column: 1 / -1; display:flex; justify-content:flex-end; align-items:center; gap:6px; margin:-3px 0 1px; color:#53667e; font-size:11px; line-height:1.4; }
+.orange-check.hidden { display:none; }
+.orange-check { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:var(--orange); color:white; font-size:11px; font-weight:900; flex-shrink:0; }
+.map-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:26px; color:var(--muted); pointer-events:none; }
+.map-empty strong { display:block; color:var(--navy); font-size:18px; margin-bottom:6px; }
+.map-empty span { font-size:13px; }
+.candidate-label { display:flex; align-items:center; gap:7px; justify-content:space-between; flex-wrap:wrap; }
+.candidate-status { color:var(--orange-dark); font-size:10px; font-weight:800; letter-spacing:0; line-height:1.4; }
+.candidate-status.unidentified { color:#6b7f96; }
+.field { min-width: 0; }
+.field label, .metric-box .lbl { display: block; color: var(--navy); font-size: 11px; font-weight: 800; letter-spacing: .055em; margin-bottom: 7px; }
+.field select, .field input { height: 43px; width: 100%; min-width: 0; border: 1px solid #bfccdd; border-radius: 9px; background: white; color: #263b57; padding: 0 12px; font-size: 13px; }
+.field select:hover,.field input:hover { border-color: #7c9abb; }
+.metric-box { grid-column: 1 / -1; border-top: 1px solid #edf0f4; margin-top: 1px; padding-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.metric-box .lbl { margin: 0; }
+.metric-buttons { display: flex; border: 1px solid #bfccdd; border-radius: 9px; padding: 3px; background: var(--bg); gap: 3px; max-width: 100%; }
+.metric-buttons button { border: 0; background: transparent; color: var(--navy); font-size: 12px; font-weight: 750; white-space: nowrap; padding: 9px 13px; border-radius: 7px; }
+.metric-buttons button:hover:not(.active) { background: #e9f0f8; }
+.metric-buttons button.active { color: white; background: var(--orange); box-shadow: 0 2px 5px #ad3e1e1a; }
+.layout { display: grid; grid-template-columns: minmax(0,1fr) 315px; gap: 14px; align-items: start; }
+.map-card,.info-card { background: white; border: 1px solid var(--line); border-radius: var(--r); min-width: 0; overflow: hidden; }
+.map-card { border-top: 3px solid var(--orange); box-shadow: 0 7px 25px #153a6810; }
+.map-header { display: flex; justify-content: space-between; align-items: center; gap: 11px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding: 15px 17px 13px; }
+.map-title { color: var(--navy); font-size: 18px; font-weight: 800; line-height: 1.2; letter-spacing: -.02em; }
+.map-subtitle { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 5px; }
+.map-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.button { background: white; color: var(--navy); border: 1px solid #bfccdd; padding: 8px 11px; border-radius: 8px; font-size: 12px; font-weight: 750; line-height: 1.2; }
+.button:hover:not(:disabled) { border-color: var(--orange); color: var(--orange-dark); }
+.button[disabled] { opacity: .48; cursor: not-allowed; }
+.button.outline-on { background: var(--orange-faint); color: var(--orange-dark); border-color: var(--orange); }
+.button.zoom { width: 33px; height: 33px; padding: 0; font-size: 19px; line-height: 31px; }
+.map-stage { height: 550px; position: relative; overflow: hidden; background: #f8fafc; background-image: radial-gradient(#d9e4ef 0.45px, transparent 0.45px); background-size: 18px 18px; }
+#mapa { display: block; height: 100%; width: 100%; touch-action: none; }
+.map-stage svg path.municipio { stroke: #eef2f6; stroke-width: .6; vector-effect: non-scaling-stroke; cursor: pointer; }
+.map-stage svg path.municipio:hover { stroke: var(--navy); stroke-width: 1.8; }
+/* V6.4: destaque por máscara municipal, mais robusto do que um perímetro único.
+   Cada município do distrito recebe uma camada laranja translúcida por cima do azul. */
+.map-stage svg path.distrito-fill { fill: rgba(232,95,42,.29); stroke: rgba(255,255,255,.75); stroke-width: 0.8; vector-effect: non-scaling-stroke; pointer-events: none; }
+.map-overlay-note { position: absolute; z-index: 5; left: 12px; top: 12px; padding: 11px 12px; max-width: 350px; background: #fffffffa; box-shadow: 0 4px 20px #19314e17; border: 1px solid #e1e8f0; border-left: 3px solid var(--orange); border-radius: 8px; color: #52657b; font-size: 12px; line-height: 1.5; display: none; }
+.map-overlay-note strong { color: var(--navy); display: block; margin-bottom: 3px; }
+.tooltip { position: absolute; display: none; z-index: 12; pointer-events: none; background: var(--navy-deep); color: white; box-shadow: 0 8px 20px #0d284a48; font-size: 12px; line-height: 1.5; padding: 10px 13px; border-radius: 8px; max-width: 245px; }
+.tooltip strong { font-size: 13px; }
+.tooltip span { color: #d1e3f6; }
+.legend { border-top: 1px solid var(--line); padding: 13px 17px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.legend-left { flex: 1; min-width: 160px; }
+.legend .key { color: var(--navy); font-weight: 800; font-size: 12px; }
+.legend-bar { width: 100%; max-width: 430px; height: 11px; background: linear-gradient(to right,#eff5fa,#c6dced,#7cadd1,#286aad,#193f74); border-radius: 99px; margin: 7px 0 5px; }
+.legend-scale { max-width: 430px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.legend-caption { flex: 0 1 300px; max-width: 325px; font-size: 11px; line-height: 1.5; color: var(--muted); }
+.badge-dot { display: inline-block; vertical-align: -2px; height: 12px; width: 12px; border-radius: 3px; border: 1.5px solid var(--orange); background: rgba(232,95,42,.29); margin-right: 5px; }
+.info-card { padding: 19px 17px 18px; border-top: 3px solid var(--navy); box-shadow: 0 7px 25px #153a680b; }
+.kicker { color: var(--orange-dark); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.deputado { color: var(--navy); font-size: 22px; font-weight: 800; line-height: 1.2; letter-spacing: -.02em; margin: 8px 0 5px; overflow-wrap: anywhere; }
+.partido { color: var(--muted); font-size: 12px; margin: 0 0 16px; }
+.stats { border-radius: 10px; border: 1px solid #d8e4ef; background: var(--bg); border-left: 3px solid var(--orange); padding: 13px 12px; margin: 15px 0; }
+.stat-label { color: var(--muted); font-size: 11px; margin-bottom: 4px; line-height: 1.4; }
+.big-number { font-size: 29px; font-weight: 800; color: var(--navy); letter-spacing: -.04em; font-variant-numeric: tabular-nums; line-height: 1.22; }
+.muted { color: var(--muted); font-size: 11px; }
+.status { background: #f4f7fb; border: 1px solid #dfe7ef; color: #425772; font-size: 12px; line-height: 1.55; padding: 12px; border-radius: 9px; margin: 14px 0; }
+.status.good { background: var(--orange-faint); border-color: #f4c9b7; border-left: 3px solid var(--orange); color: #82421d; }
+.status strong { display: block; font-size: 13px; color: var(--navy); margin-bottom: 4px; }
+.status.good strong { color: var(--orange-dark); }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 7px 0; }
+.stat-grid > div { border: 1px solid #e4eaf2; border-radius: 8px; padding: 9px 8px; min-width: 0; }
+.stat-number { font-size: 20px; letter-spacing: -.025em; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+.city-list-title { color: var(--navy); font-size: 13px; font-weight: 800; margin: 18px 0 7px; }
+.cities { max-height: 278px; overflow: auto; font-size: 12px; color: #314c69; padding: 0 0 0 20px; margin: 0; }
+.cities li { line-height: 1.5; padding: 3px 0; }
+.cities li::marker { color: var(--orange); font-weight: 800; }
+.notes { color: #687a90; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.58; padding-top: 12px; margin-top: 16px; }
+.footer { color: #667991; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.65; padding-top: 13px; margin-top: 18px; }
+.footer strong { color: var(--navy); }
+.footer p { margin: 0 0 6px; }
+.footer p:last-child { margin-bottom: 0; }
+.loading { color: #63778f; font-size: 13px; padding: 16px 3px; }
+.error { color: #9b3434; }
+.df-chart { padding: 26px 24px; max-width: 760px; margin: 20px auto; }
+.df-chart h3 { color: var(--navy); font-size: 17px; margin: 0 0 18px; }
+.df-row { display: grid; grid-template-columns: 92px minmax(65px,1fr) 100px; gap: 9px; align-items: center; margin: 10px 0; font-size: 12px; }
+.df-bar { height: 15px; background: #e8edf5; border-radius: 5px; overflow: hidden; }
+.df-bar-fill { height: 100%; background: var(--blue); }
+.df-no-geo { color: #667991; font-size: 12px; line-height: 1.65; margin-top: 20px; }
+@media (max-width: 1040px) {
+  .layout { grid-template-columns: 1fr; }
+  .map-stage { height: 500px; }
+  .info-card { display: block; }
+}
+@media (max-width: 720px) {
+  .shell { padding: 15px 12px 28px; }
+  .brandhead { margin-bottom: 18px; }
+  .brandlogo { width: 130px; }
+  .base-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+  .base-figure:nth-child(2) { border-right: 0; }
+  .toolbar { grid-template-columns: 1fr 1fr; }
+  .toolbar .candidate-field { grid-column: 1/-1; }
+  .metric-box { align-items: flex-start; }
+  .metric-buttons { width: 100%; }
+  .metric-buttons button { flex: 1; white-space: normal; font-size: 11px; padding: 9px 7px; }
+  .map-stage { height: 460px; }
+  .map-header { align-items: start; }
+  .map-actions { width: 100%; }
+  .legend-caption { flex-basis: 100%; max-width: none; }
+}
+@media (max-width: 480px) {
+  .toolbar { grid-template-columns: 1fr; padding:12px; row-gap:10px; }
+
+
+
+
+
+  .toolbar .candidate-field { grid-column: auto; }
+  .metric-box { flex-direction: column; }
+  .map-stage { height: 390px; }
+  .map-header { padding: 13px 12px; }
+  .map-actions .button:first-child { flex: 1; }
+  .button { font-size: 11px; }
+  .df-row { grid-template-columns: 70px minmax(50px,1fr) 74px; font-size: 11px; }
+  .df-chart { padding: 18px 12px; }
+  .big-number { font-size: 25px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* V6.3: DF - rolagem independente, lista ordenada e descricao das zonas */
+.df-scroll { position:absolute; inset:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#9db3ce #eef2f7; }
+.df-chart { max-width:960px; margin:0 auto; padding:22px 20px 26px; }
+.df-chart h3 { margin:0 0 6px; }
+.df-intro { margin:0 0 15px; font-size:12px; color:var(--muted); line-height:1.5; }
+.df-row { display:grid; grid-template-columns:minmax(145px,210px) minmax(55px,1fr) minmax(65px,85px); gap:12px; align-items:center; padding:9px 0; margin:0; border-bottom:1px solid #e9eff6; font-size:12px; }
+.df-place { min-width:0; }
+.df-place strong { color:var(--navy); display:block; font-size:12px; font-weight:800; }
+.df-place small { display:block; margin-top:3px; font-size:11px; line-height:1.35; color:#667a92; }
+.df-row > strong { text-align:right; font-variant-numeric:tabular-nums; color:var(--navy); }
+.df-no-geo { border-top:1px solid #e6edf5; padding-top:12px; margin:17px 0 0; font-size:11px; }
+.df-no-geo a { color:var(--blue); }
+.df-layout { display:grid; grid-template-rows:minmax(260px,1.3fr) minmax(185px,1fr); height:100%; }
+.df-map-zone { min-height:0; background:#f8fafc; border-bottom:1px solid var(--line); }
+.df-map-zone svg { width:100%;height:100%; display:block; touch-action:none; }
+.df-map-zone svg .df-zone { stroke:#ecf1f6; stroke-width:1.0; vector-effect:non-scaling-stroke; cursor:pointer; }
+.df-map-zone svg .df-zone:hover { stroke:var(--orange); stroke-width:2.5; }
+.df-layout .df-scroll { position:relative; inset:auto; }
+.df-layout .df-chart { padding:15px 18px 18px; }
+.df-layout .df-chart h3 { font-size:14px; }
+.df-layout .df-row { padding:7px 0; }
+.df-placeholder {padding:22px 18px;font-size:13px;color:var(--muted);}
+@media (max-width:720px) {
+ .df-chart {padding:16px 12px 23px;}
+ .df-row {grid-template-columns:minmax(104px,140px) minmax(36px,1fr) 67px;gap:8px;}
+ .df-place small {font-size:10px;}
+ .df-layout {grid-template-rows:minmax(210px,1.1fr) minmax(175px,1fr);}
+}
+
+
+.credits { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.55; }
+</style>
+</head>
+<body data-atlas-versao="v6.14-logo-credito">
+<div class="shell">
+  <div class="brandhead">
+    <div class="brand-kicker">eleições 2026 · atlas interativo</div>
+    <a class="brandlogo-link" href="https://www.poder360.com.br/" target="_blank" rel="noopener noreferrer" aria-label="Acessar o site do Poder360" title="Acessar o Poder360"><img class="brandlogo" src="data:image/png;base64,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" alt="Poder360" width="164" height="49"></a>
+  </div>
+  <div class="eyebrow">geografia do voto · Câmara dos Deputados</div>
+  <h1>os distritos informais dos deputados</h1>
+  <ul class="intro-list" aria-label="Como ler o mapa">
+    <li>explore a distribuição dos votos de cada deputado nas eleições de 2026</li>
+    <li>municípios estão em tons de azul e intensidade varia conforme a votação</li>
+    <li><strong>máscara laranja</strong> identifica distritos informais, formados por municípios contíguos</li>
+    <li>distritos reúnem até 10 cidades e concentram pelo menos <strong>50% dos votos</strong> no Estado</li>
+  </ul>
+  <div class="base" aria-label="Resumo do levantamento">
+    <div class="base-head"><strong>o levantamento em números</strong></div>
+    <div class="base-grid">
+      <div class="base-figure"><b>513</b><span>deputados eleitos</span></div>
+      <div class="base-figure"><b>239</b><span>com distrito informal identificado</span></div>
+      
+    </div>
+  </div>
+  <div class="sectionhead"><h2>explore o mapa eleitoral</h2><span class="pill">selecione um deputado</span></div>
+  <div class="toolbar">
+    <div class="check-legend" id="topStatus" aria-live="polite" aria-label="status do distrito informal"><span class="orange-check" id="topStatusCheck" aria-hidden="true">✓</span><span id="topStatusText">distrito identificado</span></div>
+    <div class="field"><label for="uf">Estado</label><select id="uf"><option value="TODOS">todos os Estados</option></select></div>
+    <div class="field"><label for="busca">buscar deputado</label><input id="busca" type="search" placeholder="digite parte do nome" autocomplete="off"></div>
+    <div class="field candidate-field"><div class="candidate-label"><label for="candidato">deputado federal</label></div><select id="candidato" aria-label="escolha um deputado"></select></div>
+    <div class="metric-box"><span class="lbl">colorir municípios por</span><div class="metric-buttons" role="group" aria-label="métrica do mapa"><button id="votos" class="active" type="button" aria-pressed="true">total de votos</button><button id="percentual" type="button" aria-pressed="false">% dos válidos locais</button><button id="percentualDeputado" type="button" aria-pressed="false">% dos votos do deputado</button></div></div>
+  </div>
+  <div class="layout">
+    <section class="map-card" aria-label="Mapa da votação por município">
+      <div class="map-header"><div><div class="map-title" id="mapTitle">carregando mapa…</div><div class="map-subtitle" id="mapSubtitle">votação nominal para deputado federal no 1º turno de 2026</div></div>
+        <div class="map-actions"><button id="toggleDistrict" class="button outline-on" type="button" aria-pressed="true">ocultar destaque do distrito informal</button><button id="zoomIn" class="button zoom" title="Aproximar" type="button">+</button><button id="zoomOut" class="button zoom" title="Afastar" type="button">−</button><button id="zoomReset" class="button" type="button">reenquadrar</button></div>
+      </div>
+      <div class="map-stage" id="stage"><svg id="mapa" viewBox="0 0 1000 650" role="img" aria-label="mapa municipal com gradação de votos"></svg><div class="map-empty" id="emptyState"><div><strong>selecione um deputado</strong><span>o mapa eleitoral aparecerá aqui</span></div></div><div id="tooltip" class="tooltip"></div><div id="mapNote" class="map-overlay-note"></div></div>
+      <div class="legend"><div class="legend-left"><div class="key" id="legendLabel">votos absolutos</div><div class="legend-bar"></div><div class="legend-scale"><span>0</span><span id="legendMax">—</span></div></div><div class="legend-caption"><span class="badge-dot"></span>máscara laranja: destaca os municípios do distrito informal. As cores azuis estão em escala logarítmica, para visualizar diferenças entre cidades</div></div>
+    </section>
+    <aside class="info-card" id="info" aria-live="polite"><div class="loading">lendo a base de deputados…</div></aside>
+  </div>
+  <div class="footer">
+    <p><strong>fonte:</strong> TSE (Tribunal Superior Eleitoral) e IBGE (Instituto Brasileiro de Geografia e Estatística), com dados eleitorais de 2026 e malhas municipais de 2025</p>
+    <p><strong>metodologia:</strong> o levantamento identifica blocos de até 10 municípios contíguos que, juntos, concentram ao menos 50% dos votos de cada deputado federal eleito em 2026 no respectivo Estado. Os blocos identificados foram auditados geograficamente. A busca heurística encontrou 228 blocos, confirmados na auditoria geográfica. Uma busca exata examinou outros 72 deputados com possibilidade matemática de atingir 50% dos votos em até 10 municípios: identificou 11 novos distritos e descartou 61 casos. Para os demais 205 deputados dos Estados, nem a soma dos votos de seus 10 municípios mais votados alcançou 50%. No Distrito Federal, a contiguidade entre zonas eleitorais não foi avaliada</p>
+  </div>
+  <div class="credits">painel elaborado por Rafael Barbosa, do Poder360. Todos os direitos reservados.</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+(()=>{
+'use strict';
+const ROOT='data/';
+const $=id=>document.getElementById(id);
+const fmtInt=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0});
+const fmtPct=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
+const s={dfGeo:null,dfGeoRequest:null,catalog:[],current:null,metric:'votos',outline:true,ufCache:new Map(),geoCache:new Map(),df:null,geo:null,voteMap:new Map(),districtSet:new Set(),zoom:null,drawToken:0};
+const safe=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const normalized=t=>String(t??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const code=x=>String(x??'').replace(/\.0$/,'').padStart(7,'0');
+const pct=x=>x==null||!Number.isFinite(Number(x))?'—':fmtPct.format(Number(x))+'%';
+const number=x=>fmtInt.format(Number(x||0));
+const fetchJSON=async p=>{const url=p+(p.includes('?')?'&':'?')+'v=v7_1_239';const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('Falha ao carregar '+p+' (HTTP '+r.status+')');return r.json();};
+
+// So altera a apresentacao; codigos eleitorais e nomes originais na base permanecem intactos.
+function formatarNomeDeputado(nome){
+ const palavras=String(nome??'').toLocaleLowerCase('pt-BR').split(/(\s+)/);
+ const particulas=new Set(['de','da','do','das','dos','e']);
+ return palavras.map((p,i)=>{
+  if(/^\s+$/.test(p)||!p)return p;
+  if(i>0&&particulas.has(p))return p;
+  return p.replace(/(^|[-'’])([a-zà-ÿ])/gu,(_,sep,ch)=>sep+ch.toLocaleUpperCase('pt-BR'));
+ }).join('');
+}
+
+// Siglas partidárias permanecem em maiúsculas; nomes legíveis seguem maiúscula inicial.
+function formatarPartido(nome){
+ const valor=String(nome??'').trim();
+ const sigla=normalized(valor).toUpperCase();
+ const nomes={
+  'NOVO':'Novo', 'PSOL':'Psol', 'PODE':'Podemos', 'PODEMOS':'Podemos',
+  'REPUBLICANOS':'Republicanos', 'UNIAO':'União Brasil', 'UNIÃO':'União Brasil',
+  'AVANTE':'Avante', 'SOLIDARIEDADE':'Solidariedade', 'REDE':'Rede',
+  'MISSAO':'Missão', 'MISSÃO':'Missão', 'MOBILIZA':'Mobiliza', 'AGIR':'Agir',
+  'CIDADANIA':'Cidadania', 'PATRIOTA':'Patriota', 'PROGRESSISTAS':'Progressistas'
+ };
+ if(nomes[sigla])return nomes[sigla];
+ const manterSigla=new Set(['PL','PT','PP','PV','PSD','MDB','PSDB','PDT','PSB','PRD','PCDOB','PCC','DC','PMB','PSTU','PCB','PCO']);
+ if(manterSigla.has(sigla))return sigla==='PCDOB'?'PCdoB':sigla;
+ if(valor.length>4)return valor.toLocaleLowerCase('pt-BR').replace(/(^|[ -])([a-zà-ÿ])/gu,(_,sep,ch)=>sep+ch.toLocaleUpperCase('pt-BR'));
+ return valor;
+}
+
+function note(title,desc){const e=$('mapNote');if(!title){e.style.display='none';return;} e.innerHTML='<strong>'+safe(title)+'</strong>'+safe(desc);e.style.display='block';}
+function error(err){console.error(err);$('info').innerHTML='<div class="loading error"><strong>Não foi possível abrir a base.</strong><p>'+safe(err.message)+'</p><p>Se estiver testando no Mac, abra esta pasta pelo servidor local indicado no README. Para incorporar no site, mantenha o HTML e a pasta <code>data/</code> juntos.</p></div>';note('Falha no carregamento',err.message);}
+function renderOptions(keep=true){
+ const uf=$('uf').value,q=normalized($('busca').value);
+ const subset=s.catalog.filter(x=>(uf==='TODOS'||x.u===uf)
+  &&(!q||normalized(x.n+' '+x.p+' '+x.u).includes(q)))
+  .sort((a,b)=>a.n.localeCompare(b.n,'pt-BR',{sensitivity:'base'}));
+ const prev=keep?$('candidato').value:'';
+ const sel=$('candidato');
+ sel.replaceChildren(new Option('selecione um deputado',''),
+   ...subset.map(x=>new Option(`${x.d?'✓ ':''}${x.n} — ${x.p} (${x.u})`,x.id)));
+ sel.value=(prev&&subset.some(x=>x.id===prev))?prev:'';
+ sel.disabled=subset.length===0;
+ if(!subset.length){sel.replaceChildren(new Option('nenhum deputado encontrado',''));}
+ return subset.length>0;
+}
+function limparMapa(titulo,subtitulo,informacao){
+ ++s.drawToken;s.current=null;s.zoom=null;s.geo=null;
+ resetStage();
+ $('emptyState').style.display='flex';
+ d3.select('#mapa').style('display','none');
+ $('mapTitle').textContent=titulo;
+ $('mapSubtitle').textContent=subtitulo;
+ $('info').innerHTML=`<div class="loading">${safe(informacao)}</div>`;
+ $('zoomIn').disabled=$('zoomOut').disabled=$('zoomReset').disabled=true;
+ setButtons(false,false);
+ $('toggleDistrict').textContent='selecione um deputado';
+ atualizarStatusDeputado(null);
+ $('legendMax').textContent='—';
+ note(null);
+}
+function mostrarSemResultados(){limparMapa('nenhum deputado encontrado','ajuste o Estado ou a busca por nome','nenhum deputado corresponde à busca.');}
+function mostrarAguardandoEscolha(){limparMapa('selecione um deputado','votação nominal por município nas eleições de 2026','escolha um deputado para visualizar os votos e o distrito informal, quando identificado.');}
+function aplicarFiltros(keep=false){
+ if(!renderOptions(keep)){mostrarSemResultados();return;}
+ const id=$('candidato').value;
+ if(id)choose(id);else mostrarAguardandoEscolha();
+}
+function atualizarStatusDeputado(d){
+ const top=$('topStatusText');
+ const chk=$('topStatusCheck');
+ if(!top||!chk)return;
+ if(!d){
+  top.textContent='';
+  chk.classList.add('hidden');
+  return;
+ }
+ if(d.d){
+  top.textContent='distrito identificado';
+  chk.classList.remove('hidden');
+ }else{
+  top.textContent='sem distrito nos critérios';
+  chk.classList.add('hidden');
+ }
+}
+async function loadState(uf){if(!s.ufCache.has(uf))s.ufCache.set(uf,fetchJSON(`${ROOT}votos/${uf}.json`));return s.ufCache.get(uf);}
+// CORRECAO V6.1: sf/GeoJSON e D3 usam convencoes de orientacao diferentes.
+// Em D3, um anel exterior invertido e interpretado como o complemento do
+// municipio na esfera: aparece um enorme retangulo no lugar do mapa estadual.
+// Fazemos a conferencia separadamente em CADA poligono (inclusive ilhas e
+// multipoligonos), sem alterar vertices, votos ou os codigos do IBGE.
+function normalizarAnelDePoligono(aneis){
+ if(!Array.isArray(aneis)||!aneis.length)return aneis;
+ const area=d3.geoArea({type:'Polygon',coordinates:aneis});
+ if(area>2*Math.PI){
+  // Inverte tambem os aneis internos para preservar o sentido dos buracos.
+  return aneis.map(anel=>anel.slice().reverse());
+ }
+ return aneis;
+}
+function normalizarGeometrias(geo,origem){
+ if(!geo||geo.type!=='FeatureCollection'||!Array.isArray(geo.features))throw new Error('GeoJSON invalido: '+origem);
+ let corrigidos=0;
+ for(const feicao of geo.features){
+  const g=feicao.geometry;
+  if(!g)continue;
+  if(g.type==='Polygon'){
+   const antes=g.coordinates;
+   g.coordinates=normalizarAnelDePoligono(antes);
+   if(g.coordinates!==antes)corrigidos++;
+  }else if(g.type==='MultiPolygon'){
+   g.coordinates=g.coordinates.map(aneis=>{
+    const novo=normalizarAnelDePoligono(aneis);
+    if(novo!==aneis)corrigidos++;
+    return novo;
+   });
+  }
+ }
+ const limites=d3.geoBounds(geo);
+ console.info('[ATLAS V6.2]',origem,'poligonos reorientados:',corrigidos,'limites:',limites);
+ return geo;
+}
+async function loadGeo(uf){
+ if(!s.geoCache.has(uf))s.geoCache.set(uf,fetchJSON(`${ROOT}geo/${uf}.geojson`).then(j=>normalizarGeometrias(j,'municipios '+uf)));
+ return s.geoCache.get(uf);
+}
+function mapVals(raw){return new Map((raw||[]).map(r=>[code(r[0]),{v:Number(r[1])||0,p:r[2]==null?null:Number(r[2]),q:r[3]==null?null:Number(r[3])}]));}
+function renderInfo(d,rows){const has=d.d===true,df=d.u==='DF';const block=has?`<div class="status good"><strong>distrito informal identificado</strong>${d.b} município${d.b===1?'':'s'} contíguo${d.b===1?'':'s'}, com ${pct(d.bp)} dos votos do deputado.</div>`:
+ df?'<div class="status"><strong>DF: contiguidade não analisada</strong>os deputados do DF não integram os 239 blocos municipais confirmados. A votação por zona eleitoral aparece no gráfico e, se a malha geográfica for validada, também em mapa.</div>':'<div class="status"><strong>sem distrito informal nos critérios da pesquisa</strong>não existe um bloco de até 10 municípios contíguos que reúna pelo menos 50% dos votos do deputado, segundo a verificação do teto matemático e a busca exata</div>';
+const cities=has?`<div class="city-list-title">municípios do distrito informal</div><ol class="cities">${(d.cidades||[]).map(x=>`<li>${safe(x.n)} <span class="muted">(${number(x.v)} votos)</span></li>`).join('')}</ol>`:'';
+$('info').innerHTML=`<div><div class="kicker">${safe(d.u)} · ${safe(d.p)}</div><div class="deputado">${safe(d.n)}</div><div class="partido">deputado federal eleito em 2026</div><div class="stats"><div class="stat-label">total de votos do deputado</div><div class="big-number">${number(d.t)}</div><div class="muted">votos nominais em toda a unidade da Federação</div></div>${block}<div class="stat-grid"><div><div class="stat-label">votos no distrito</div><div class="stat-number">${has?number(d.bv):'—'}</div></div><div><div class="stat-label">% no distrito</div><div class="stat-number">${has?pct(d.bp):'—'}</div></div></div>${cities}</div><div class="notes">${df?'No DF, o gráfico abaixo usa zonas eleitorais; não são tratados como municípios.':'Passe o cursor sobre cada município para ver votos e participação local.'}<br>Em “% dos válidos locais”, o denominador é o total de votos válidos para deputado federal no município (inclusive votos de legenda).</div>`;}
+function setButtons(has,df){const el=$('toggleDistrict');el.disabled=!has||df;el.classList.toggle('outline-on',s.outline&&has&&!df);el.setAttribute('aria-pressed',String(s.outline&&has&&!df));el.textContent=!has?(df?'sem destaque geográfico no DF':'sem distrito nos critérios'):(s.outline?'ocultar destaque do distrito':'mostrar destaque do distrito');}
+function cssColor(t){if(!Number.isFinite(t)||t<=0)return '#eff5fa';return d3.interpolateRgbBasis(['#dbeaf5','#97bddc','#3f85b6','#193f74'])(Math.max(0,Math.min(1,t)));}
+function resetStage(){d3.select('#mapa').selectAll('*').remove();$('stage').querySelectorAll('.df-chart,.df-scroll,.df-layout').forEach(e=>e.remove());$('tooltip').style.display='none';}
+function showTooltip(event,feature){const id=code(feature.properties.cod_ibge),x=s.voteMap.get(id)||{v:0,p:0};const name=feature.properties.name_muni||feature.properties.nome||id;const em=s.districtSet.has(id);$('tooltip').innerHTML=`<strong>${safe(name)}</strong> ${em?'<span>· distrito informal</span>':''}<div>${number(x.v)} votos</div><div><span>${pct(x.p)} dos válidos locais · ${pct(x.q)} dos votos do deputado</span></div>`;const rc=$('stage').getBoundingClientRect();const e=$('tooltip');e.style.display='block';const w=e.offsetWidth,h=e.offsetHeight;e.style.left=Math.max(6,Math.min(rc.width-w-6,event.clientX-rc.left+13))+'px';e.style.top=Math.max(6,Math.min(rc.height-h-6,event.clientY-rc.top+12))+'px';}
+// V6.2: converte diretamente as coordenadas dos aneis em uma linha SVG.
+// d3.geoPath aplica recortes sobre a esfera; em algumas geometrias dissolvidas
+// (sf::st_union), esses recortes interrompem o traço do contorno. Aqui a
+// projecao e identica a usada no mapa-base, mas os vertices sao unidos em
+// 2D e o caminho e sempre fechado sem recortes geodesicos.
+function drawGeo(d){if(!s.geo)return;resetStage();$('emptyState').style.display='none';d3.select('#mapa').style('display','block');$('mapTitle').textContent=`${d.n} · ${d.u}`;$('mapSubtitle').textContent=s.metric==='votos'?'votação absoluta por município':s.metric==='percentual'?'participação nos votos válidos locais para deputado federal':'participação na votação total do deputado';const svg=d3.select('#mapa').attr('viewBox','0 0 1000 650');const root=svg.append('g');// Apos reorientar os aneis, o Mercator enquadra o ESTADO, e nao seu complemento.
+const limites=d3.geoBounds(s.geo);
+const limitesSuspeitos=!Number.isFinite(limites[0][0])||!Number.isFinite(limites[1][0])||
+ (limites[1][0]-limites[0][0]>55)||(limites[1][1]-limites[0][1]>48)||
+ limites[0][0]<-80||limites[1][0]>-28||limites[0][1]<-40||limites[1][1]>11;
+// Contingencia: a projecao plana usa as mesmas coordenadas sem interpretacao esferica
+// de interior/exterior, impedindo o aparecimento de um bloco retangular falso.
+const proj=limitesSuspeitos
+ ? d3.geoIdentity().reflectY(true).fitExtent([[22,25],[978,618]],s.geo)
+ : d3.geoMercator().fitExtent([[22,25],[978,618]],s.geo);
+if(limitesSuspeitos)console.warn('[ATLAS V6.2] Projecao plana de contingencia:',d.u,limites);
+const path=d3.geoPath(proj);const features=s.geo.features||[];
+const values=features.map(f=>{const val=s.voteMap.get(code(f.properties.cod_ibge))||{v:0,p:0};return s.metric==='votos'?val.v:s.metric==='percentual'?(Number.isFinite(val.p)?val.p:0):(Number.isFinite(val.q)?val.q:0);});const max=d3.max(values)||0;
+const val=f=>{const o=s.voteMap.get(code(f.properties.cod_ibge))||{v:0,p:0};return s.metric==='votos'?o.v:s.metric==='percentual'?(Number.isFinite(o.p)?o.p:0):(Number.isFinite(o.q)?o.q:0);};
+const strength=v=>max<=0?0:(s.metric==='votos'?Math.log1p(v)/Math.log1p(max):Math.sqrt(v/max));
+root.selectAll('path.municipio').data(features).join('path').attr('class','municipio').attr('d',path).attr('fill',f=>cssColor(strength(val(f)))).on('mousemove',showTooltip).on('mouseenter',showTooltip).on('mouseleave',()=>$('tooltip').style.display='none');
+if(s.outline&&d.d){
+ const distritos=features.filter(f=>s.districtSet.has(code(f.properties.cod_ibge)));
+ if(distritos.length){
+  const camada=root.append('g').attr('class','camada-distrito');
+  camada.selectAll('path.distrito-fill').data(distritos).join('path')
+   .attr('class','distrito-fill')
+   .attr('d',path);
+ }
+}
+const zoom=d3.zoom().scaleExtent([1,10]).on('zoom',ev=>root.attr('transform',ev.transform));svg.call(zoom).on('dblclick.zoom',null);s.zoom={svg,zoom};$('legendLabel').textContent=s.metric==='votos'?'votos absolutos por município':s.metric==='percentual'?'% dos válidos locais':'% da votação total do deputado';$('legendMax').textContent=s.metric==='votos'?number(max):pct(max);document.querySelector('.legend-caption').innerHTML=`<span class="badge-dot"></span>máscara laranja: destaca os municípios do distrito informal. ${s.metric==='votos'?'As cores azuis estão em escala logarítmica, para visualizar diferenças entre cidades':'As cores azuis variam de intensidade conforme o percentual selecionado'}`;note(null);
+}
+
+// Resumos de abrangencia territorial - Procuradoria Regional Eleitoral no DF,
+// atualizacao 08.out.2026. RAs e bairros nao sao municipios independentes.
+const DF_ZONAS={
+ 1:'Asa Sul · Vila Telebrasília',
+ 2:'Paranoá · Itapoã · Lago Norte · Varjão',
+ 3:'Taguatinga Norte',
+ 4:'Santa Maria',
+ 5:'Sobradinho · Sobradinho II · Fercal',
+ 6:'Planaltina',
+ 8:'Ceilândia (QNM, QNN e parte do P Norte)',
+ 9:'Guará · Estrutural · Park Sul',
+ 10:'Núcleo Bandeirante · Candangolândia · Riacho Fundo · Park Way',
+ 11:'Cruzeiro · Sudoeste · Octogonal',
+ 13:'Samambaia (maior parte)',
+ 14:'Asa Norte · Noroeste · Vila Planalto',
+ 15:'Águas Claras · Taguatinga Sul/Centro · Arniqueira',
+ 16:'Ceilândia Norte · Brazlândia',
+ 17:'Gama',
+ 18:'Lago Sul',
+ 19:'Jardim Botânico · São Sebastião',
+ 20:'Ceilândia Sul · Vicente Pires · parte de Taguatinga Norte',
+ 21:'Recanto das Emas · parte de Samambaia'
+};
+const TRE_DF_ABRANGENCIA='https://www.mpf.mp.br/atuacao/fiscalizacao-do-processo-eleitoral/estrutura/procuradorias-regionais-eleitorais-pres/pre-df/zonas-e-promotores-eleitorais';
+const DF_GEOMETRIA_URL=ROOT+'geo/DF_zonas.geojson';
+function zonaNr(feature){return Number(feature?.properties?.zona);}
+function valorDF(r){return s.metric==='votos'?Number(r[1])||0:s.metric==='percentual'?Number(r[2])||0:Number(r[3])||0;}
+// Malha opcional: so usada se tiver exatamente as 19 zonas presentes nos votos.
+async function carregarMalhaDF(){
+ if(s.dfGeoRequest)return s.dfGeoRequest;
+ s.dfGeoRequest=fetchJSON(DF_GEOMETRIA_URL).then(g=>{
+  if(g?.type!=='FeatureCollection'||!Array.isArray(g.features))throw Error('Arquivo de zonas sem FeatureCollection');
+  const nums=g.features.map(zonaNr);
+  const esperadas=[1,2,3,4,5,6,8,9,10,11,13,14,15,16,17,18,19,20,21];
+  if(nums.length!==19||new Set(nums).size!==19||esperadas.some(z=>!nums.includes(z)))
+    throw Error('A malha nao corresponde as 19 zonas eleitorais presentes no atlas');
+  normalizarGeometrias(g,'zonas DF');
+  s.dfGeo=g;
+  return g;
+ }).catch(e=>{console.info('[ATLAS V6.3] Mapa DF indisponivel; lista completa permanece ativa:',e.message);s.dfGeo=null;return null;});
+ return s.dfGeoRequest;
+}
+function tooltipZonaDF(event,f,lookup){
+ const z=zonaNr(f), r=lookup.get(z), v=r?valorDF(r):0;
+ const tooltip=$('tooltip');
+ tooltip.innerHTML=`<strong>Zona ${String(z).padStart(2,'0')}</strong><div>${safe(DF_ZONAS[z]||'Abrangência não informada')}</div><div>${s.metric==='votos'?number(v)+' votos':pct(v)}</div>`;
+ const rc=$('stage').getBoundingClientRect();tooltip.style.display='block';
+ const w=tooltip.offsetWidth,h=tooltip.offsetHeight;
+ tooltip.style.left=Math.max(6,Math.min(rc.width-w-6,event.clientX-rc.left+12))+'px';
+ tooltip.style.top=Math.max(6,Math.min(rc.height-h-6,event.clientY-rc.top+12))+'px';
+}
+function desenharMapaDF(geo,rows,element){
+ const svg=d3.select(element).attr('viewBox','0 0 960 520'), root=svg.append('g');
+ const proj=d3.geoMercator().fitExtent([[24,22],[936,496]],geo);
+ const path=d3.geoPath(proj), lookup=new Map(rows.map(r=>[Number(r[0]),r]));
+ const max=d3.max(rows,valorDF)||0;
+ const intensidade=v=>max<=0?0:(s.metric==='votos'?Math.log1p(v)/Math.log1p(max):Math.sqrt(v/max));
+ root.selectAll('path.df-zone').data(geo.features).join('path').attr('class','df-zone')
+  .attr('d',path).attr('fill',f=>cssColor(intensidade(valorDF(lookup.get(zonaNr(f))||[]))))
+  .on('mousemove',(ev,f)=>tooltipZonaDF(ev,f,lookup))
+  .on('mouseenter',(ev,f)=>tooltipZonaDF(ev,f,lookup))
+  .on('mouseleave',()=>$('tooltip').style.display='none');
+ const zoom=d3.zoom().scaleExtent([1,10]).on('zoom',ev=>root.attr('transform',ev.transform));
+ svg.call(zoom).on('dblclick.zoom',null);s.zoom={svg,zoom};
+}
+
+function drawDF(d,raw){
+ resetStage();$('emptyState').style.display='none';
+ $('mapTitle').textContent=`${d.n} · Distrito Federal`;
+ $('legendLabel').textContent=s.metric==='votos'?'votos absolutos por zona eleitoral':s.metric==='percentual'?'% dos válidos locais':'% dos votos do deputado';
+ const rows=[...(raw||[])].sort((a,b)=>valorDF(b)-valorDF(a)||Number(a[0])-Number(b[0]));
+ const maximum=Math.max(1,...rows.map(valorDF));
+ $('legendMax').textContent=s.metric==='votos'?number(maximum):pct(maximum);
+ document.querySelector('.legend-caption').innerHTML='zonas eleitorais do DF: votação apresentada por área de abrangência. não há contorno de distrito informal para os deputados do DF.';
+ const chart=document.createElement('div');chart.className='df-chart';
+ chart.innerHTML='<h3>votação nas zonas eleitorais do DF</h3>'+
+  '<p class="df-intro">da maior para a menor votação na métrica selecionada. Descrições territoriais resumidas.</p>'+
+  rows.map(r=>{
+   const v=valorDF(r),zona=Number(r[0]);
+   return `<div class="df-row"><div class="df-place"><strong>Zona ${safe(String(zona).padStart(2,'0'))}</strong><small>${safe(DF_ZONAS[zona]||'Área não identificada')}</small></div><div class="df-bar" title="${safe(DF_ZONAS[zona]||'')}"><div class="df-bar-fill" style="width:${Math.max(0,100*v/maximum)}%"></div></div><strong>${s.metric==='votos'?number(v):pct(v)}</strong></div>`;
+  }).join('')+
+  `<p class="df-no-geo">As zonas eleitorais podem abranger partes de várias regiões administrativas. <a href="${TRE_DF_ABRANGENCIA}" target="_blank" rel="noopener noreferrer">Confira a abrangência oficial detalhada (MPF)</a>. Para o DF, a contiguidade não foi calculada.</p>`;
+ d3.select('#mapa').style('display','none');
+ const wrapper=document.createElement('div');wrapper.className='df-scroll';
+ wrapper.tabIndex=0;wrapper.setAttribute('aria-label','Zonas do DF: role para ver todas as zonas eleitorais');
+ wrapper.appendChild(chart);
+ const geo=s.dfGeo;
+ if(geo){
+  const layout=document.createElement('div');layout.className='df-layout';
+  const zone=document.createElement('div');zone.className='df-map-zone';
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('aria-label','Mapa das zonas eleitorais do Distrito Federal');
+  zone.appendChild(svg);layout.appendChild(zone);layout.appendChild(wrapper);$('stage').appendChild(layout);
+  desenharMapaDF(geo,rows,svg);
+  $('mapSubtitle').textContent='mapa de votação por zona eleitoral · lista completa com rolagem abaixo';
+  $('zoomIn').disabled=$('zoomOut').disabled=$('zoomReset').disabled=false;
+ }else{
+  $('stage').appendChild(wrapper);
+  $('mapSubtitle').textContent='votação por zona eleitoral · deslize a lista para ver todas';
+  $('zoomIn').disabled=$('zoomOut').disabled=$('zoomReset').disabled=true;s.zoom=null;
+ }
+ note(null);
+}
+async function choose(id){const d=s.catalog.find(x=>x.id===id);if(!d)return;const token=++s.drawToken;s.current=d;atualizarStatusDeputado(d);setButtons(d.d,d.u==='DF');renderInfo(d);$('info').setAttribute('aria-busy','true');$('mapTitle').textContent='carregando '+d.u+'…';try{
+ if(d.u==='DF'){if(!s.df)s.df=fetchJSON(ROOT+'df.json');const [data]=await Promise.all([s.df,carregarMalhaDF()]);if(token!==s.drawToken)return;const byId=data.zonas||{};s.geo=null;renderInfo(d);drawDF(d,byId[d.id]||[]);}else{d3.select('#mapa').style('display','block');$('zoomIn').disabled=$('zoomOut').disabled=$('zoomReset').disabled=false;const [state,geo]=await Promise.all([loadState(d.u),loadGeo(d.u)]);if(token!==s.drawToken)return;s.geo=geo;s.voteMap=mapVals((state.votos||{})[d.id]);const blockRaw=(state.blocos||{})[d.id]||[];s.districtSet=new Set((Array.isArray(blockRaw)?blockRaw:[blockRaw]).map(code));if(d.d&&s.districtSet.size===0)throw new Error('O bloco auditado não está no arquivo de municípios: '+d.id);drawGeo(d);}
+ }catch(e){if(token===s.drawToken)error(e);}finally{if(token===s.drawToken)$('info').removeAttribute('aria-busy');}}
+async function init(){if(typeof d3==='undefined')throw new Error('A biblioteca de mapas D3 não carregou. Confirme o acesso à internet ou hospede uma cópia local do d3.min.js.');const raw=await fetchJSON(ROOT+'deputados.json');const esperados=Number(raw.distritos_confirmados);if(esperados!==239)throw new Error('A pasta data/ ainda não está na versão atualizada: deputados.json informa '+esperados+' distritos; necessários 239. Utilize a pasta data/ gerada pelo R V7.');s.catalog=(raw.deputados||[]).map(d=>({...d,n:formatarNomeDeputado(d.n),p:formatarPartido(d.p)}));if(s.catalog.length!==513)throw new Error('Catálogo incompleto: esperados 513 deputados; encontrados '+s.catalog.length);const count=s.catalog.filter(d=>d.d).length;if(count!==esperados)throw new Error('Inconsistência dos dados: o catálogo informa '+count+' distritos identificados, mas os metadados indicam '+esperados+'.');const ufs=[...new Set(s.catalog.map(d=>d.u))].sort();ufs.forEach(uf=>$('uf').add(new Option(uf,uf)));
+$('uf').value='SP';renderOptions(false);
+// Padrao editorial: Sao Paulo e Adriana Ventura, primeira na lista alfabetica de SP.
+const candidataPadrao=s.catalog.find(d=>d.u==='SP'&&normalized(d.n)==='adriana ventura');
+if(!candidataPadrao)throw new Error('Adriana Ventura (SP) nao consta no catalogo de 513 deputados.');
+$('candidato').value=String(candidataPadrao.id);
+$('uf').addEventListener('change',()=>aplicarFiltros(false));$('busca').addEventListener('input',()=>aplicarFiltros(false));$('candidato').addEventListener('change',()=>{const id=$('candidato').value;if(id)choose(id);else mostrarAguardandoEscolha();});
+for(const [id,key] of [['votos','votos'],['percentual','percentual'],['percentualDeputado','percentualDeputado']])$(id).addEventListener('click',()=>{if(s.metric===key)return;s.metric=key;for(const b of ['votos','percentual','percentualDeputado']){$(b).classList.toggle('active',b===id);$(b).setAttribute('aria-pressed',String(b===id));}if(s.current){if(s.current.u==='DF')s.df.then(data=>drawDF(s.current,(data.zonas||{})[s.current.id]||[]));else drawGeo(s.current);}});
+$('toggleDistrict').addEventListener('click',()=>{if(!s.current?.d||s.current.u==='DF')return;s.outline=!s.outline;setButtons(true,false);drawGeo(s.current);});$('zoomIn').addEventListener('click',()=>s.zoom?.svg.transition().duration(200).call(s.zoom.zoom.scaleBy,1.45));$('zoomOut').addEventListener('click',()=>s.zoom?.svg.transition().duration(200).call(s.zoom.zoom.scaleBy,1/1.45));$('zoomReset').addEventListener('click',()=>s.zoom?.svg.transition().duration(220).call(s.zoom.zoom.transform,d3.zoomIdentity));
+await choose($('candidato').value);
+}
+init().catch(error);
+})();
+</script>
+</body>
+</html>
