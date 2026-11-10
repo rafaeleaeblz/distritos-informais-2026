@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Os distritos informais dos deputados | Eleições 2026 — V7.2 · Embed responsivo · Critério territorial de 50%</title>
+<title>Os distritos informais dos deputados | Eleições 2026 — V7.3 · Embed completo responsivo · Critério territorial de 50%</title>
 <meta name="description" content="Atlas interativo dos votos municipais dos deputados federais eleitos em 2026. Dados do TSE e malhas do IBGE.">
 <style>
 :root {
@@ -217,7 +217,7 @@ body.embed-mode .sectionhead h2 { font-size: 18px; }
 }
 </style>
 </head>
-<body data-atlas-versao="v7.2-embed-responsivo">
+<body data-atlas-versao="v7.3-embed-completo-responsivo">
 <div class="shell">
   <div class="brandhead">
     <div class="brand-kicker">eleições 2026 · atlas interativo</div>
@@ -568,19 +568,22 @@ init().catch(error);
 </script>
 
 <script>
-/* V7.2 — comunica a altura do conteúdo ao site hospedeiro de modo seguro. */
+/* V7.3 — comunica a altura tanto no modo compacto quanto no completo. */
 (function () {
   'use strict';
-  if (new URLSearchParams(window.location.search).get('embed') !== '1') return;
-  document.body.classList.add('embed-mode');
+  const embedMode = new URLSearchParams(window.location.search).get('embed');
+  if (embedMode !== '1' && embedMode !== 'full') return;
+  // Só o modo compacto oculta a introdução; o modo full preserva tudo.
+  if (embedMode === '1') document.body.classList.add('embed-mode');
   const shell = document.querySelector('.shell');
   let lastHeight = -1;
   let queued = false;
 
   function currentHeight() {
-    const shellBottom = shell ? (shell.getBoundingClientRect().bottom + window.scrollY) : 0;
-    return Math.ceil(Math.max(document.body.scrollHeight,
-      document.documentElement.scrollHeight, shellBottom));
+    // Medir o conteúdo, não a altura do próprio iframe, para evitar
+    // um ciclo que impeça a redução da altura após mudança de largura.
+    const shellBottom = shell ? shell.getBoundingClientRect().bottom + window.scrollY : 0;
+    return Math.ceil(Math.max(250, shellBottom + 4));
   }
   function reportHeight(force) {
     const h = currentHeight();
