@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Os distritos informais dos deputados | Eleições 2026 — V7.8 · Links individuais por deputado · Critério territorial de 50%</title>
+<title>Os distritos informais dos deputados | Eleições 2026</title>
 <meta name="description" content="Atlas interativo dos votos municipais dos deputados federais eleitos em 2026. Dados do TSE e malhas do IBGE.">
 <!-- Opção isolada: ocultar apenas o cabeçalho e sua borda laranja. -->
 <script>
@@ -330,11 +330,13 @@ const $=id=>document.getElementById(id);
 const fmtInt=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0});
 const fmtPct=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
 const s={dfGeo:null,dfGeoRequest:null,catalog:[],current:null,metric:'votos',outline:true,ufCache:new Map(),geoCache:new Map(),df:null,geo:null,voteMap:new Map(),districtSet:new Set(),zoom:null,drawToken:0};
-// Links permanentes: o identificador da base é a chave única. A UF é informativa.
-// No embed do WordPress, o endereço do iframe muda, mas não o da reportagem.
-// Por isso oferecemos um botão de copiar que compartilha a página completa do atlas.
+// V7.11: os links compartilhados apontam para a reportagem do Poder360.
+// A navegacao interna do atlas continua independente da URL da reportagem.
+const URL_REPORTAGEM_PODER360 = 'https://www.poder360.com.br/poder-eleicoes-2026/distritos-informais-deputados-federais/';
+const ORIGENS_PODER360 = new Set(['https://www.poder360.com.br', 'https://poder360.com.br']);
+let deputadoSolicitadoPeloWordPress = null;
 function construirUrlDeputado(d,compartilhar=false){
- const u=new URL(window.location.href);
+ const u = new URL(compartilhar ? URL_REPORTAGEM_PODER360 : window.location.href);
  if(compartilhar){u.search='';u.hash='';}
  u.searchParams.set('uf',String(d.u));
  u.searchParams.set('deputado',String(d.id));
@@ -347,8 +349,38 @@ function atualizarUrlNavegacao(d){
  }
 }
 function deputadoDaUrl(){
- const id=new URLSearchParams(window.location.search).get('deputado');
- return id?s.catalog.find(d=>String(d.id)===id):null;
+ let id = new URLSearchParams(window.location.search).get('deputado');
+ // Se o atlas for servido no MESMO dominio da reportagem, le a URL da pagina pai.
+ if(!id && window.parent !== window){
+  try{
+   if(window.parent.location.origin === window.location.origin){
+    id = new URLSearchParams(window.parent.location.search).get('deputado');
+   }
+  }catch(e){ /* iframe em outro dominio: usar a ponte postMessage do WordPress */ }
+ }
+ if(!id) id = deputadoSolicitadoPeloWordPress;
+ return id?s.catalog.find(d=>String(d.id)===String(id)):null;
+}
+// Na incorporacao entre dominios, o script autorizado no WordPress envia o ID.
+// Escuta mensagens somente da pagina pai do Poder360; nao aceita mensagens arbitrarias.
+window.addEventListener('message',function(event){
+ if(event.source !== window.parent || !ORIGENS_PODER360.has(event.origin))return;
+ const dados=event.data;
+ if(!dados || dados.type !== 'p360-atlas-open-deputado')return;
+ const id=String(dados.deputado??'');
+ if(!/^\d{6,20}$/.test(id))return;
+ deputadoSolicitadoPeloWordPress=id;
+ if(!s.catalog.length)return; // sera aplicado ao terminar de carregar os dados
+ const d=s.catalog.find(x=>String(x.id)===id);
+ if(d){
+  selecionarDeputadoPeloEndereco(d);
+  atualizarUrlNavegacao(d);
+ }
+});
+// Solicita ao WordPress qual deputado foi indicado no endereco da reportagem.
+function solicitarDeputadoAoWordPress(){
+ if(window.parent === window)return;
+ window.parent.postMessage({type:'p360-atlas-request-deputado'},'*');
 }
 function acaoCompartilhar(d){
  const b=$('copiarLinkDeputado');
@@ -377,7 +409,7 @@ async function copiarLinkDeputado(){
  const result=$('shareResult');
  result.hidden=false;
  if(copiado){
-  result.textContent='link copiado — abre diretamente em '+d.n+' ('+d.u+')';
+  result.textContent='link do Poder360 copiado para '+d.n+' ('+d.u+')';
   $('shareFallback').hidden=true;
  }else{
   // Fallback visível: alguns WordPress bloqueiam clipboard-write nos iframes.
@@ -691,8 +723,10 @@ window.addEventListener('popstate',()=>{
 for(const [id,key] of [['votos','votos'],['percentual','percentual'],['percentualDeputado','percentualDeputado']])$(id).addEventListener('click',()=>{if(s.metric===key)return;s.metric=key;for(const b of ['votos','percentual','percentualDeputado']){$(b).classList.toggle('active',b===id);$(b).setAttribute('aria-pressed',String(b===id));}if(s.current){if(s.current.u==='DF')s.df.then(data=>drawDF(s.current,(data.zonas||{})[s.current.id]||[]));else drawGeo(s.current);}});
 $('toggleDistrict').addEventListener('click',()=>{if(!s.current?.d||s.current.u==='DF')return;s.outline=!s.outline;setButtons(true,false);drawGeo(s.current);});$('zoomIn').addEventListener('click',()=>s.zoom?.svg.transition().duration(200).call(s.zoom.zoom.scaleBy,1.45));$('zoomOut').addEventListener('click',()=>s.zoom?.svg.transition().duration(200).call(s.zoom.zoom.scaleBy,1/1.45));$('zoomReset').addEventListener('click',()=>s.zoom?.svg.transition().duration(220).call(s.zoom.zoom.transform,d3.zoomIdentity));
 // A selecao inicial ja foi feita por selecionarDeputadoPeloEndereco.
+ solicitarDeputadoAoWordPress();
 }
 init().catch(error);
+window.addEventListener('load',solicitarDeputadoAoWordPress);
 })();
 </script>
 
