@@ -302,7 +302,7 @@ html.p360-hide-header .brandhead { display: none !important; }
 html.p360-hide-header .shell { padding-top: 0 !important; }
 </style>
 </head>
-<body data-atlas-versao="v7.13-lista-cidades-corrigida">
+<body data-atlas-versao="v7.15-lista-na-mesma-pagina">
 <div class="shell">
   <div class="brandhead">
     <div class="brand-kicker">eleições 2026 · atlas interativo</div>
@@ -349,7 +349,7 @@ html.p360-hide-header .shell { padding-top: 0 !important; }
         <div class="all-cities-title">votação em todas as cidades</div>
         <div class="all-cities-subtitle" id="allCitiesSubtitle">lista completa das cidades em que o deputado recebeu votos</div>
       </div>
-      <a id="backToMapLink" class="button info-link" href="#">voltar ao mapa interativo</a>
+      <button id="backToMapLink" type="button" class="button info-link" data-atlas-view="mapa">voltar ao mapa interativo</button>
     </div>
     <div class="all-cities-controls">
       <div class="field" style="max-width:420px; width:100%;">
@@ -394,7 +394,7 @@ const s={dfGeo:null,dfGeoRequest:null,catalog:[],current:null,metric:'votos',out
 // A navegacao interna do atlas continua independente da URL da reportagem.
 const URL_REPORTAGEM_PODER360 = 'https://www.poder360.com.br/poder-eleicoes-2026/distritos-informais-deputados-federais/';
 const ORIGENS_PODER360 = new Set(['https://www.poder360.com.br', 'https://poder360.com.br']);
-const VIEW_MODE = new URLSearchParams(window.location.search).get('view') === 'municipios';
+let VIEW_MODE = new URLSearchParams(window.location.search).get('view') === 'municipios';
 let deputadoSolicitadoPeloWordPress = null;
 function construirUrlDeputado(d,compartilhar=false){
  const u = new URL(compartilhar ? URL_REPORTAGEM_PODER360 : window.location.href);
@@ -644,22 +644,46 @@ const has=d.d===true,df=d.u==='DF';const block=has?`<div class="status good"><st
 const cidadesOrdenadas=(d.cidades||[]).slice().sort((a,b)=>(Number(b.v)||0)-(Number(a.v)||0)||String(a.n||'').localeCompare(String(b.n||''),'pt-BR'));
 const cities=has?`<div class="city-list-title">municípios do distrito informal</div><ol class="cities">${cidadesOrdenadas.map(x=>`<li>${safe(x.n)} <span class="muted">(${number(x.v)} votos)</span></li>`).join('')}</ol>`:'';
 const actionLink = VIEW_MODE
- ? `<a class="button info-link" href="${safe(urlDoMapa(d,false).href)}">voltar ao mapa interativo</a>`
- : `<a class="button info-link" href="${safe(urlDaListaMunicipios(d,false).href)}" target="_blank" rel="noopener noreferrer">ver votação em todas as cidades</a>`;
+ ? `<button class="button info-link" type="button" data-atlas-view="mapa">voltar ao mapa interativo</button>`
+ : `<button class="button info-link" type="button" data-atlas-view="municipios">ver votação em todas as cidades</button>`;
 $('info').innerHTML=`<div><div class="kicker">${safe(d.u)} · ${safe(d.p)}</div><div class="deputado">${safe(d.n)}</div><div class="partido">deputado federal eleito em 2026</div><div class="stats"><div class="stat-label">total de votos do deputado</div><div class="big-number">${number(d.t)}</div><div class="muted">votos nominais em toda a unidade da Federação</div><div class="info-actions">${actionLink}</div></div>${block}<div class="stat-grid"><div><div class="stat-label">votos no distrito</div><div class="stat-number">${has?number(d.bv):'—'}</div></div><div><div class="stat-label">% no distrito</div><div class="stat-number">${has?pct(d.bp):'—'}</div></div></div>${cities}</div><div class="notes"><ul><li>${df?'no DF, o gráfico abaixo usa zonas eleitorais; não são tratados como municípios':'passe o cursor sobre cada município para ver votos e participação local'}</li><li>em “% dos válidos locais”, o denominador é o total de votos válidos para deputado federal no município (inclusive votos de legenda)</li></ul></div>`;}
 function setButtons(has,df){const el=$('toggleDistrict');el.disabled=!has||df;el.classList.toggle('outline-on',s.outline&&has&&!df);el.setAttribute('aria-pressed',String(s.outline&&has&&!df));el.textContent=!has?(df?'sem destaque geográfico no DF':'sem distrito informal'):(s.outline?'ocultar destaque do distrito':'mostrar destaque do distrito');}
 function cssColor(t){if(!Number.isFinite(t)||t<=0)return '#eff5fa';return d3.interpolateRgbBasis(['#dbeaf5','#97bddc','#3f85b6','#193f74'])(Math.max(0,Math.min(1,t)));}
 function resetStage(){d3.select('#mapa').selectAll('*').remove();$('stage').querySelectorAll('.df-chart,.df-scroll,.df-layout').forEach(e=>e.remove());$('tooltip').style.display='none';}
 
-function ativarModoListaMunicipios(){
- document.body.classList.add('view-mode-cidades');
+// Alterna mapa/lista no MESMO documento, mantendo o iframe na reportagem.
+// Apenas a query string interna do atlas muda; nao e necessario abrir o GitHub em outra aba.
+function aplicarModoVisualizacao(){
+ document.body.classList.toggle('view-mode-cidades', VIEW_MODE);
  const sec=$('allCitiesViewSection');
- if(sec)sec.hidden=false;
+ if(sec)sec.hidden=!VIEW_MODE;
  const h2=document.querySelector('.sectionhead h2');
- if(h2)h2.textContent='explore a votação nas cidades';
+ if(h2)h2.textContent=VIEW_MODE?'explore a votação nas cidades':'explore o mapa eleitoral';
  const pill=document.querySelector('.sectionhead .pill');
- if(pill)pill.textContent='lista completa por deputado';
+ if(pill)pill.textContent=VIEW_MODE?'lista completa por deputado':'selecione um deputado';
 }
+function alternarVisualizacao(modo){
+ const lista=modo==='municipios';
+ if(VIEW_MODE===lista)return;
+ VIEW_MODE=lista;
+ const u=new URL(window.location.href);
+ if(lista)u.searchParams.set('view','municipios');
+ else u.searchParams.delete('view');
+ if(s.current){
+  u.searchParams.set('uf',String(s.current.u));
+  u.searchParams.set('deputado',String(s.current.id));
+ }
+ window.history.pushState({deputado:s.current?String(s.current.id):null,view:lista?'municipios':'mapa'},'',u.pathname+u.search+u.hash);
+ aplicarModoVisualizacao();
+ if(s.current)choose(String(s.current.id));
+}
+// Delegacao de eventos: os botoes da ficha sao recriados a cada troca de deputado.
+document.addEventListener('click',function(event){
+ const botao=event.target.closest('[data-atlas-view]');
+ if(!botao)return;
+ event.preventDefault();
+ alternarVisualizacao(botao.getAttribute('data-atlas-view'));
+});
 function montarLinhasMunicipios(geo,raw){
  const feats=(geo&&geo.features)||[];
  const nomes=new Map(feats.map(f=>{
@@ -705,8 +729,6 @@ function renderListaCompletaMunicipios(d,rows,isDF=false){
  if(summary)summary.innerHTML=`<strong>${number(rows.length)}</strong> ${isDF?'zonas':'cidades'} com voto registrado`;
  const search=$('citySearch');
  if(search){search.value='';search.placeholder=isDF?'digite parte do nome ou do número da zona':'digite parte do nome da cidade';}
- const back=$('backToMapLink');
- if(back)back.href=urlDoMapa(d,false).href;
  renderTabelaCidades(rows,isDF);
 }
 function showTooltip(event,feature){const id=code(feature.properties.cod_ibge),x=s.voteMap.get(id)||{v:0,p:0};const name=feature.properties.name_muni||feature.properties.nome||id;const em=s.districtSet.has(id);$('tooltip').innerHTML=`<strong>${safe(name)}</strong> ${em?'<span>· distrito informal</span>':''}<div>${number(x.v)} votos</div><div><span>${pct(x.p)} dos válidos locais · ${pct(x.q)} dos votos do deputado</span></div>`;const rc=$('stage').getBoundingClientRect();const e=$('tooltip');e.style.display='block';const w=e.offsetWidth,h=e.offsetHeight;e.style.left=Math.max(6,Math.min(rc.width-w-6,event.clientX-rc.left+13))+'px';e.style.top=Math.max(6,Math.min(rc.height-h-6,event.clientY-rc.top+12))+'px';}
@@ -854,13 +876,15 @@ async function init(){if(typeof d3==='undefined')throw new Error('A biblioteca d
 const candidataPadrao=s.catalog.find(d=>d.u==='SP'&&normalized(d.n)==='adriana ventura');
 if(!candidataPadrao)throw new Error('Adriana Ventura (SP) nao consta no catalogo de 513 deputados.');
 const candidataInicial=deputadoDaUrl()||candidataPadrao;
-if(VIEW_MODE)ativarModoListaMunicipios();
+aplicarModoVisualizacao();
 selecionarDeputadoPeloEndereco(candidataInicial);
 $('uf').addEventListener('change',()=>aplicarFiltros(false));$('busca').addEventListener('input',()=>aplicarFiltros(false));$('candidato').addEventListener('change',()=>{const id=$('candidato').value;if(id)choose(id,true);else mostrarAguardandoEscolha();});
 $('copiarLinkDeputado').addEventListener('click',copiarLinkDeputado);
 $('shareFallbackSelect').addEventListener('click',()=>{$('shareFallbackInput').focus();$('shareFallbackInput').select();});
 if($('citySearch'))$('citySearch').addEventListener('input',aplicarBuscaCidades);
 window.addEventListener('popstate',()=>{
+ VIEW_MODE=new URLSearchParams(window.location.search).get('view')==='municipios';
+ aplicarModoVisualizacao();
  selecionarDeputadoPeloEndereco(deputadoDaUrl()||candidataPadrao);
 });
 for(const [id,key] of [['votos','votos'],['percentual','percentual'],['percentualDeputado','percentualDeputado']])$(id).addEventListener('click',()=>{if(s.metric===key)return;s.metric=key;for(const b of ['votos','percentual','percentualDeputado']){$(b).classList.toggle('active',b===id);$(b).setAttribute('aria-pressed',String(b===id));}if(s.current){if(s.current.u==='DF')s.df.then(data=>drawDF(s.current,(data.zonas||{})[s.current.id]||[]));else drawGeo(s.current);}});
