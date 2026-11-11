@@ -632,7 +632,14 @@ async function loadGeo(uf){
  return s.geoCache.get(uf);
 }
 function mapVals(raw){return new Map((raw||[]).map(r=>[code(r[0]),{v:Number(r[1])||0,p:r[2]==null?null:Number(r[2]),q:r[3]==null?null:Number(r[3])}]));}
-function renderInfo(d,rows){const has=d.d===true,df=d.u==='DF';const block=has?`<div class="status good"><strong>distrito informal identificado</strong>${d.b} município${d.b===1?'':'s'} contíguo${d.b===1?'':'s'}, com ${pct(d.bp)} dos votos do deputado</div>`:
+function renderInfo(d,rows){
+// A aba de votação municipal mostra apenas a identificação e o total do deputado.
+// O mapa e seus indicadores de distrito permanecem inalterados na página principal.
+if(VIEW_MODE){
+ $('info').innerHTML=`<div class="kicker">${safe(d.u)} · ${safe(d.p)}</div><div class="deputado">${safe(d.n)}</div><div class="partido">deputado federal eleito em 2026</div><div class="stats"><div class="stat-label">total de votos do deputado</div><div class="big-number">${number(d.t)}</div><div class="muted">votos nominais em toda a unidade da Federação</div></div>`;
+ return;
+}
+const has=d.d===true,df=d.u==='DF';const block=has?`<div class="status good"><strong>distrito informal identificado</strong>${d.b} município${d.b===1?'':'s'} contíguo${d.b===1?'':'s'}, com ${pct(d.bp)} dos votos do deputado</div>`:
  df?'<div class="status"><strong>DF: contiguidade não analisada</strong>os deputados do DF não integram os 239 blocos municipais confirmados. A votação por zona eleitoral aparece no gráfico e, se a malha geográfica for validada, também em mapa.</div>':'<div class="status"><strong>sem distrito informal</strong>não existe um bloco de até 10 municípios contíguos que reúna pelo menos 50% dos votos do deputado, segundo a verificação do teto matemático e a busca exata</div>';
 const cidadesOrdenadas=(d.cidades||[]).slice().sort((a,b)=>(Number(b.v)||0)-(Number(a.v)||0)||String(a.n||'').localeCompare(String(b.n||''),'pt-BR'));
 const cities=has?`<div class="city-list-title">municípios do distrito informal</div><ol class="cities">${cidadesOrdenadas.map(x=>`<li>${safe(x.n)} <span class="muted">(${number(x.v)} votos)</span></li>`).join('')}</ol>`:'';
