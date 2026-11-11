@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Os distritos informais dos deputados | Eleições 2026 — V7.8 · Links individuais por deputado · Critério territorial de 50%</title>
 <meta name="description" content="Atlas interativo dos votos municipais dos deputados federais eleitos em 2026. Dados do TSE e malhas do IBGE.">
+<!-- Opção isolada: ocultar apenas o cabeçalho e sua borda laranja. -->
+<script>
+if (new URLSearchParams(window.location.search).get('hideHeader') === 'true') {
+  document.documentElement.classList.add('p360-hide-header');
+}
+</script>
 <style>
 :root {
   --navy: #1f4378; --navy-deep: #19385f; --blue: #286aad;
@@ -263,6 +269,10 @@ body.p360-full-embedded .cities { max-height: none; overflow: visible; }
   body.p360-full-embedded .metric-buttons button { min-width: 28%; }
   body.p360-full-embedded .shell { padding-left: 8px; padding-right: 8px; }
 }
+/* ?hideHeader=true: remove o header inteiro (inclusive a linha laranja)
+   e o espaço superior, sem alterar as demais áreas do atlas. */
+html.p360-hide-header .brandhead { display: none !important; }
+html.p360-hide-header .shell { padding-top: 0 !important; }
 </style>
 </head>
 <body data-atlas-versao="v7.8-links-individuais">
