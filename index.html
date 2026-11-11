@@ -302,7 +302,7 @@ html.p360-hide-header .brandhead { display: none !important; }
 html.p360-hide-header .shell { padding-top: 0 !important; }
 </style>
 </head>
-<body data-atlas-versao="v7.12-lista-cidades">
+<body data-atlas-versao="v7.13-lista-cidades-corrigida">
 <div class="shell">
   <div class="brandhead">
     <div class="brand-kicker">eleições 2026 · atlas interativo</div>
@@ -636,7 +636,7 @@ function renderInfo(d,rows){const has=d.d===true,df=d.u==='DF';const block=has?`
  df?'<div class="status"><strong>DF: contiguidade não analisada</strong>os deputados do DF não integram os 239 blocos municipais confirmados. A votação por zona eleitoral aparece no gráfico e, se a malha geográfica for validada, também em mapa.</div>':'<div class="status"><strong>sem distrito informal</strong>não existe um bloco de até 10 municípios contíguos que reúna pelo menos 50% dos votos do deputado, segundo a verificação do teto matemático e a busca exata</div>';
 const cidadesOrdenadas=(d.cidades||[]).slice().sort((a,b)=>(Number(b.v)||0)-(Number(a.v)||0)||String(a.n||'').localeCompare(String(b.n||''),'pt-BR'));
 const cities=has?`<div class="city-list-title">municípios do distrito informal</div><ol class="cities">${cidadesOrdenadas.map(x=>`<li>${safe(x.n)} <span class="muted">(${number(x.v)} votos)</span></li>`).join('')}</ol>`:'';
-const actionLink = IS_CITY_VIEW
+const actionLink = VIEW_MODE
  ? `<a class="button info-link" href="${safe(urlDoMapa(d,false).href)}">voltar ao mapa interativo</a>`
  : `<a class="button info-link" href="${safe(urlDaListaMunicipios(d,false).href)}" target="_blank" rel="noopener noreferrer">ver votação em todas as cidades</a>`;
 $('info').innerHTML=`<div><div class="kicker">${safe(d.u)} · ${safe(d.p)}</div><div class="deputado">${safe(d.n)}</div><div class="partido">deputado federal eleito em 2026</div><div class="stats"><div class="stat-label">total de votos do deputado</div><div class="big-number">${number(d.t)}</div><div class="muted">votos nominais em toda a unidade da Federação</div><div class="info-actions">${actionLink}</div></div>${block}<div class="stat-grid"><div><div class="stat-label">votos no distrito</div><div class="stat-number">${has?number(d.bv):'—'}</div></div><div><div class="stat-label">% no distrito</div><div class="stat-number">${has?pct(d.bp):'—'}</div></div></div>${cities}</div><div class="notes"><ul><li>${df?'no DF, o gráfico abaixo usa zonas eleitorais; não são tratados como municípios':'passe o cursor sobre cada município para ver votos e participação local'}</li><li>em “% dos válidos locais”, o denominador é o total de votos válidos para deputado federal no município (inclusive votos de legenda)</li></ul></div>`;}
@@ -895,7 +895,7 @@ window.addEventListener('load',solicitarDeputadoAoWordPress);
     window.parent.postMessage({
       type: 'p360-atlas-embed-height',
       height: h,
-      version: '7.12'
+      version: '7.13'
     }, '*');
   }
 
