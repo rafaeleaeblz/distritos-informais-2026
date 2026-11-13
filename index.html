@@ -300,9 +300,32 @@ body.p360-full-embedded .cities { max-height: none; overflow: visible; }
    e o espaço superior, sem alterar as demais áreas do atlas. */
 html.p360-hide-header .brandhead { display: none !important; }
 html.p360-hide-header .shell { padding-top: 0 !important; }
+
+/* V7.18 — tabela de votos por município: quatro colunas visíveis no celular.
+   Somente o modo mobile é modificado; a versão desktop permanece igual. */
+@media (max-width: 640px) {
+  .city-table-wrap { width: 100%; max-width: 100%; overflow-x: hidden; }
+  .city-table { table-layout: fixed; width: 100%; min-width: 0; font-size: 10.5px; }
+  .city-table th:nth-child(1) { width: 36%; }
+  .city-table th:nth-child(2) { width: 17%; }
+  .city-table th:nth-child(3) { width: 23.5%; }
+  .city-table th:nth-child(4) { width: 23.5%; }
+  .city-table th, .city-table td { padding: 9px 5px; line-height: 1.35; }
+  .city-table th { font-size: 10px; letter-spacing: 0; overflow-wrap: anywhere; }
+  .city-table th.num { text-align: right; white-space: normal; }
+  .city-table .city-th-part { display: block; }
+  .city-table td.num { text-align: right; white-space: nowrap; font-size: 10.5px; }
+  .city-table td strong { font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+  .city-table td:first-child { overflow-wrap: anywhere; }
+}
+@media (max-width: 360px) {
+  .city-table th, .city-table td { padding: 8px 4px; }
+  .city-table td.num { font-size: 10px; }
+  .city-table th { font-size: 9.5px; }
+}
 </style>
 </head>
-<body data-atlas-versao="v7.15-lista-na-mesma-pagina">
+<body data-atlas-versao="v7.18-tabela-mobile">
 <div class="shell">
   <div class="brandhead">
     <div class="brand-kicker">eleições 2026 · atlas interativo</div>
@@ -365,8 +388,8 @@ html.p360-hide-header .shell { padding-top: 0 !important; }
             <tr>
               <th>município</th>
               <th class="num">votos</th>
-              <th class="num">% dos válidos locais</th>
-              <th class="num">% dos votos do deputado</th>
+              <th class="num"><span class="city-th-part">% dos válidos</span> <span class="city-th-part">locais</span></th>
+              <th class="num"><span class="city-th-part">% dos votos</span> <span class="city-th-part">do deputado</span></th>
             </tr>
           </thead>
           <tbody id="cityTableBody"></tbody>
