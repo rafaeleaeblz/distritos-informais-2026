@@ -394,7 +394,21 @@ const s={dfGeo:null,dfGeoRequest:null,catalog:[],current:null,metric:'votos',out
 // A navegacao interna do atlas continua independente da URL da reportagem.
 const URL_REPORTAGEM_PODER360 = 'https://www.poder360.com.br/poder-eleicoes-2026/distritos-informais-deputados-federais/';
 const ORIGENS_PODER360 = new Set(['https://www.poder360.com.br', 'https://poder360.com.br']);
-let VIEW_MODE = new URLSearchParams(window.location.search).get('view') === 'municipios';
+// V7.16: recebe os parametros da reportagem mesmo quando o Atlas roda em iframe
+// de outro dominio. Para esse modo, o iframe precisa ter referrerpolicy="unsafe-url".
+// A URL so e considerada se vier exatamente da pagina oficial do levantamento.
+function parametrosDaReportagemReferrer(){
+ if(window.parent === window || !document.referrer)return null;
+ try {
+  const url = new URL(document.referrer);
+  if(!ORIGENS_PODER360.has(url.origin))return null;
+  const caminhoEsperado = new URL(URL_REPORTAGEM_PODER360).pathname.replace(/\/$/,'');
+  if(url.pathname.replace(/\/$/,'') !== caminhoEsperado)return null;
+  return url.searchParams;
+ } catch (_) { return null; }
+}
+let VIEW_MODE = new URLSearchParams(window.location.search).get('view') === 'municipios'
+ || parametrosDaReportagemReferrer()?.get('view') === 'municipios';
 let deputadoSolicitadoPeloWordPress = null;
 function construirUrlDeputado(d,compartilhar=false){
  const u = new URL(compartilhar ? URL_REPORTAGEM_PODER360 : window.location.href);
@@ -421,16 +435,21 @@ function atualizarUrlNavegacao(d){
 }
 function deputadoDaUrl(){
  let id = new URLSearchParams(window.location.search).get('deputado');
- // Se o atlas for servido no MESMO dominio da reportagem, le a URL da pagina pai.
+ // Acesso direto ao Atlas e iframe no mesmo dominio.
  if(!id && window.parent !== window){
-  try{
+  try {
    if(window.parent.location.origin === window.location.origin){
     id = new URLSearchParams(window.parent.location.search).get('deputado');
    }
-  }catch(e){ /* iframe em outro dominio: usar a ponte postMessage do WordPress */ }
+  } catch (_) { /* iframe em outro dominio: conferir referrer */ }
  }
- if(!id) id = deputadoSolicitadoPeloWordPress;
- return id?s.catalog.find(d=>String(d.id)===String(id)):null;
+ // Iframe em outro dominio: a URL completa da reportagem e transmitida
+ // pelo atributo referrerpolicy="unsafe-url" do iframe (se o navegador permitir).
+ if(!id)id=parametrosDaReportagemReferrer()?.get('deputado');
+ // Solucao garantida: ponte postMessage instalada pela equipe de tecnologia.
+ if(!id)id=deputadoSolicitadoPeloWordPress;
+ if(!id || !/^\d{6,20}$/.test(id))return null;
+ return s.catalog.find(d=>String(d.id)===String(id))||null;
 }
 // Na incorporacao entre dominios, o script autorizado no WordPress envia o ID.
 // Escuta mensagens somente da pagina pai do Poder360; nao aceita mensagens arbitrarias.
